@@ -1,4 +1,4 @@
 LispEx
 ======
 
-A Lisp dialect with concurrency features, written in Go.
+A dialect of Lisp extended to support for concurrent programming, written in Go.
