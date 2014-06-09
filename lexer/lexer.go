@@ -1,18 +1,34 @@
 package lexer
 
 import (
+  "fmt"
   "strings"
   "unicode/utf8"
 )
 
 type TokenType int
 
+const EOF = -1
+
+const (
+  TokenError TokenType = iota
+  TokenEOF
+
+  TokenOpenParen
+  TokenCloseParen
+  TokenOpenSquare
+  TokenCloseSquare
+
+  TokenStringLiteral
+  TokenIntegerLiteral
+  TokenFloatLiteral
+  TokenBooleanLiteral
+)
+
 type Token struct {
   Type  TokenType
   Value string
 }
-
-const EOF = -1
 
 type stateFn func(*Lexer) stateFn
 
@@ -47,8 +63,8 @@ func (l *Lexer) run() {
   close(l.tokens)
 }
 
-func (l *Lexer) emit(typ TokenType) {
-  l.tokens <- Token{typ, l.input[l.start:l.pos]}
+func (l *Lexer) emit(t TokenType) {
+  l.tokens <- Token{t, l.input[l.start:l.pos]}
   l.start = l.pos
 }
 
@@ -73,11 +89,16 @@ func (l *Lexer) ignore() {
   l.start = l.pos
 }
 
+func (l *Lexer) peek() rune {
+  r := l.next()
+  l.backup()
+  return r
+}
+
 func (l *Lexer) accept(valid string) bool {
   if strings.IndexRune(valid, l.next()) >= 0 {
     return true
   }
-
   l.backup()
   return false
 }
@@ -89,5 +110,35 @@ func (l *Lexer) acceptRun(valid string) {
 }
 
 func lexWhiteSpace(l *Lexer) stateFn {
+  for r := l.next(); r == ' ' || r == '\t' || r == '\n'; l.next() {
+    r = l.peek()
+  }
+  l.backup()
+  l.ignore()
+
+  switch r := l.next(); {
+  case r == EOF:
+    return lexEOF
+  case r == '(':
+    return lexOpenParen
+  case r == ')':
+    return lexCloseParen
+  default:
+    panic(fmt.Sprintf("Unexpected token: %q", r))
+  }
+}
+
+func lexEOF(l *Lexer) stateFn {
+  l.emit(TokenEOF)
+  return nil
+}
+
+func lexOpenParen(l *Lexer) stateFn {
+  l.emit(TokenOpenParen)
+  return lexWhiteSpace
+}
+
+func lexCloseParen(l *Lexer) stateFn {
+  l.emit(TokenCloseParen)
   return lexWhiteSpace
 }
