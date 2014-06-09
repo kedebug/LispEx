@@ -3,6 +3,7 @@ package lexer
 import (
   "fmt"
   "strings"
+  "unicode"
   "unicode/utf8"
 )
 
@@ -23,6 +24,8 @@ const (
   TokenIntegerLiteral
   TokenFloatLiteral
   TokenBooleanLiteral
+
+  TokenIdentifier
 )
 
 type Token struct {
@@ -110,8 +113,7 @@ func (l *Lexer) acceptRun(valid string) {
 }
 
 func lexWhiteSpace(l *Lexer) stateFn {
-  for r := l.next(); r == ' ' || r == '\t' || r == '\n'; l.next() {
-    r = l.peek()
+  for r := l.next(); r == ' ' || r == '\t' || r == '\n'; r = l.next() {
   }
   l.backup()
   l.ignore()
@@ -123,8 +125,12 @@ func lexWhiteSpace(l *Lexer) stateFn {
     return lexOpenParen
   case r == ')':
     return lexCloseParen
+  case r == '+' || r == '-' || ('0' <= r && r <= '9'):
+    return lexNumber
+  case isAlphaNumeric(r):
+    return lexIdentifier
   default:
-    panic(fmt.Sprintf("Unexpected token: %q", r))
+    panic(fmt.Sprintf("Unexpected character: %q", r))
   }
 }
 
@@ -141,4 +147,25 @@ func lexOpenParen(l *Lexer) stateFn {
 func lexCloseParen(l *Lexer) stateFn {
   l.emit(TokenCloseParen)
   return lexWhiteSpace
+}
+
+func lexIdentifier(l *Lexer) stateFn {
+  for r := l.next(); isAlphaNumeric(r); r = l.next() {
+  }
+  l.backup()
+
+  l.emit(TokenIdentifier)
+  return lexWhiteSpace
+}
+
+func lexNumber(l *Lexer) stateFn {
+  return lexWhiteSpace
+}
+
+func isAlphaNumeric(r rune) bool {
+  switch r {
+  case '>', '<', '=', '-', '+', '*', '/':
+    return true
+  }
+  return unicode.IsLetter(r) || unicode.IsDigit(r)
 }
