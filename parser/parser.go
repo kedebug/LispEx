@@ -4,28 +4,37 @@ import (
   "github.com/kedebug/LispEx/lexer"
 )
 
-type Ast []Node
-
-type Any interface{}
+type NodeType int
 
 type Node interface {
   Type() NodeType
   String() string
 }
 
-type NodeType int
-
 const (
-  NodeIdentifier NodeType = iota
+  NodeNil NodeType = iota
+  NodeIdentifier
   NodeNumberLiteral
   NodeStringLiteral
-  NodeCallExpression
+  NodeExpression
 )
 
-func Parse(l *lexer.Lexer) Ast {
-  return traverse(l, make(Ast, 0), ' ')
+func (nodeType NodeType) Type() NodeType {
+  return nodeType
 }
 
-func traverse(l *lexer.Lexer, ast Ast, seek rune) Ast {
+func Parse(l *lexer.Lexer) []Node {
+  return parser(l, []Node{})
+}
 
+func parser(l *lexer.Lexer, ast []Node) []Node {
+  for token := l.NextToken(); token.Type != lexer.TokenEOF; token = l.NextToken() {
+    switch token.Type {
+    case lexer.TokenOpenParen:
+      ast = append(ast, NewExpressionNode(parser(l, ast)))
+    case lexer.TokenCloseParen:
+      return ast
+    }
+  }
+  return ast
 }

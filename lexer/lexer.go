@@ -134,7 +134,7 @@ func lexWhiteSpace(l *Lexer) stateFn {
     l.backup()
     return lexNumber
   case isAlphaNumeric(r):
-    // begin with non-character
+    // begin with non-numberic character
     l.backup()
     return lexIdentifier
   default:
