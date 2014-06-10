@@ -15,17 +15,17 @@ const (
   TokenError TokenType = iota
   TokenEOF
 
-  TokenOpenParen
-  TokenCloseParen
-  TokenOpenSquare
-  TokenCloseSquare
+  TokenIdentifier
 
   TokenStringLiteral
   TokenIntegerLiteral
   TokenFloatLiteral
   TokenBooleanLiteral
 
-  TokenIdentifier
+  TokenOpenParen
+  TokenCloseParen
+  TokenOpenSquare
+  TokenCloseSquare
 )
 
 type Token struct {
@@ -112,6 +112,11 @@ func (l *Lexer) acceptRun(valid string) {
   l.backup()
 }
 
+func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
+  l.tokens <- Token{TokenError, fmt.Sprintf(format, args...)}
+  return nil
+}
+
 func lexWhiteSpace(l *Lexer) stateFn {
   for r := l.next(); r == ' ' || r == '\t' || r == '\n'; r = l.next() {
   }
@@ -126,8 +131,11 @@ func lexWhiteSpace(l *Lexer) stateFn {
   case r == ')':
     return lexCloseParen
   case r == '+' || r == '-' || ('0' <= r && r <= '9'):
+    l.backup()
     return lexNumber
   case isAlphaNumeric(r):
+    // begin with non-character
+    l.backup()
     return lexIdentifier
   default:
     panic(fmt.Sprintf("Unexpected character: %q", r))
@@ -159,6 +167,35 @@ func lexIdentifier(l *Lexer) stateFn {
 }
 
 func lexNumber(l *Lexer) stateFn {
+  isFloat := false
+
+  l.accept("+-")
+  digits := "0123456789"
+  if l.accept("0") && l.accept("xX") {
+    digits = "0123456789abcdefABCDEF"
+  }
+  l.acceptRun(digits)
+
+  if l.accept(".") {
+    isFloat = true
+    l.acceptRun(digits)
+  }
+
+  if l.accept("eE") {
+    l.accept("+-")
+    l.acceptRun("0123456789")
+  }
+
+  if r := l.peek(); isAlphaNumeric(r) {
+    l.next()
+    return l.errorf("bad number syntax: %q", l.input[l.start:l.pos])
+  }
+
+  if isFloat {
+    l.emit(TokenFloatLiteral)
+  } else {
+    l.emit(TokenIntegerLiteral)
+  }
   return lexWhiteSpace
 }
 
