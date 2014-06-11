@@ -1,5 +1,9 @@
 package parser
 
+import (
+  "fmt"
+)
+
 type ExpressionNode struct {
   NodeType
   Callee Node
@@ -7,7 +11,11 @@ type ExpressionNode struct {
 }
 
 func (expr *ExpressionNode) String() string {
-  return ""
+  if expr.Type() == NodeNil {
+    return "()"
+  }
+  args := fmt.Sprint(expr.Args)
+  return fmt.Sprintf("(%s %s)", expr.Callee, args[1:len(args)-1])
 }
 
 func NewExpressionNode(args []Node) *ExpressionNode {
