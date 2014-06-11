@@ -10,7 +10,7 @@ func args() {
   filename := os.Args[1]
   bytes, err := ioutil.ReadFile(filename)
   if err != nil {
-    fmt.Errorf("failed reading file: %v", err)
+    panic(fmt.Errorf("failed reading file: %v", err))
     return
   }
 

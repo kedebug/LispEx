@@ -138,7 +138,7 @@ func lexWhiteSpace(l *Lexer) stateFn {
     l.backup()
     return lexIdentifier
   default:
-    panic(fmt.Sprintf("Unexpected character: %q", r))
+    return l.errorf("Unexpected character: %q", r)
   }
 }
 
