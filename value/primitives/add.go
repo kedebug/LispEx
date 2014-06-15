@@ -12,6 +12,6 @@ func NewAdd() value.Value {
   return &Add{value.Primitive{"+"}}
 }
 
-func (add *Add) Apply(args []value.Value) value.Value {
+func (self *Add) Apply(args []value.Value) value.Value {
   return nil
 }
