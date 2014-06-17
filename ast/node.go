@@ -6,6 +6,7 @@ import (
 )
 
 type Node interface {
+  String() string
   Eval(s *scope.Scope) value.Value
 }
 

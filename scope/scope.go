@@ -51,3 +51,13 @@ func (self *Scope) LookupLocal(name string) value.Value {
   v, _ := self.env[name]
   return v
 }
+
+func (self *Scope) FindScope(name string) *Scope {
+  if v := self.LookupLocal(name); v != nil {
+    return self
+  } else if self.parent != nil {
+    return self.parent.FindScope(name)
+  } else {
+    return nil
+  }
+}
