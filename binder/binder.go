@@ -22,13 +22,13 @@ func Define(env *scope.Scope, pattern, value ast.Node) {
   }
 }
 
-func Assign(env *scope.Scope, pattern ast.Node, val value.Value) {
+func Assign(s *scope.Scope, pattern ast.Node, val value.Value) {
   switch pattern.(type) {
   case *ast.Name:
     id := pattern.(*ast.Name).Identifier
-    lastenv := env.FindScope(id)
-    if lastenv != nil {
-      lastenv.Put(id, val)
+    env := s.FindScope(id)
+    if env != nil {
+      env.Put(id, val)
     } else {
       panic(fmt.Sprintf("%s was not defined", id))
     }

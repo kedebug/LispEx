@@ -17,7 +17,7 @@ func NewFunction(params []Name, body Node) *Function {
 }
 
 func (self *Function) Eval(env *scope.Scope) value.Value {
-  return &closure.NewClosure(env, self)
+  return closure.NewClosure(env, self)
 }
 
 func (self *Function) String() string {
