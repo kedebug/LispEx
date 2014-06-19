@@ -2,57 +2,48 @@ package parser
 
 import (
   "fmt"
+  "github.com/kedebug/LispEx/ast"
   "github.com/kedebug/LispEx/lexer"
-  "strconv"
 )
 
-type NodeType int
-
-type Node interface {
-  Type() NodeType
-  String() string
+func ParseFromString(name, program string) ast.Node {
+  return Parse(lexer.NewLexer(name, program))
 }
 
-const (
-  NodeNil NodeType = iota
-  NodeIdentifier
-  NodeLiteral
-  NodeExpression
-)
-
-func (nodeType NodeType) Type() NodeType {
-  return nodeType
+func Parse(l *lexer.Lexer) ast.Node {
+  elements := parser(l, make([]ast.Node, 0), ' ')
+  return ast.NewBlock(elements)
 }
 
-func Parse(l *lexer.Lexer) []Node {
-  return parser(l, []Node{})
-}
-
-func parser(l *lexer.Lexer, ast []Node) []Node {
+func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
   for token := l.NextToken(); token.Type != lexer.TokenEOF; token = l.NextToken() {
     switch token.Type {
     case lexer.TokenIdentifier:
-      ast = append(ast, NewIdentifierNode(token.Value))
-    case lexer.TokenBooleanLiteral:
-      v, _ := strconv.ParseBool(token.Value)
-      ast = append(ast, NewLiteralNode(v))
+      elements = append(elements, ast.NewName(token.Value))
+
     case lexer.TokenIntegerLiteral:
-      v, _ := strconv.ParseInt(token.Value, 10, 0)
-      ast = append(ast, NewLiteralNode(v))
-    case lexer.TokenFloatLiteral:
-      v, _ := strconv.ParseFloat(token.Value, 64)
-      ast = append(ast, NewLiteralNode(v))
-    case lexer.TokenStringLiteral:
-      ast = append(ast, NewLiteralNode(token.Value))
+      elements = append(elements, ast.NewInt(token.Value))
+
     case lexer.TokenOpenParen:
-      ast = append(ast, NewExpressionNode(parser(l, ast)))
+      tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), ')'))
+      elements = append(elements, tuple)
+
     case lexer.TokenCloseParen:
-      return ast
+      if seek != ')' {
+        panic(fmt.Errorf("unmatched closing delimter: '%c'", seek))
+      }
+      return elements
+
     case lexer.TokenError:
       panic(fmt.Errorf("token error: %s", token.Value))
+
     default:
-      panic("unexpected token type")
+      panic(fmt.Errorf("unexpected token type: %v", token.Type))
     }
   }
-  return ast
+
+  if seek != ' ' {
+    panic(fmt.Errorf("unclosed delimeter, expected: '%c'", seek))
+  }
+  return elements
 }
