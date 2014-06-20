@@ -7,9 +7,11 @@ import (
   "github.com/kedebug/LispEx/value/closure"
 )
 
+// ((foo 1) 2)
 type Function struct {
-  Params []Name
-  Body   Node
+  Caller    Name
+  ParamList []Pair
+  Body      Node
 }
 
 func NewFunction(params []Name, body Node) *Function {

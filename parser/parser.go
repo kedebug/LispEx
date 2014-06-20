@@ -33,6 +33,8 @@ func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
     case lexer.TokenCloseParen:
       if seek != ')' {
         panic(fmt.Errorf("unmatched closing delimter: '%c'", seek))
+      } else if len(elements) == 0 {
+        panic(fmt.Errorf("missing procedure expression"))
       }
       return elements
 
@@ -77,14 +79,54 @@ func ParseNode(node ast.Node) ast.Node {
   }
 }
 
-func ParseBlock(tuple *ast.Tuple) ast.Node {
+func ParseBlock(tuple *ast.Tuple) *ast.Block {
+  elements := tuple.Elements
+  exprs := ParseList(elements)
+  return ast.NewBlock(exprs)
+}
+
+func ParseDefine(tuple *ast.Tuple) *ast.Define {
+  elements := tuple.Elements
+  if len(elements) < 3 {
+    panic(fmt.Sprint("define: bad syntax (missing expressions) ", tuple))
+  }
+
+  switch elements[1].(type) {
+  case *ast.Name:
+    // case 1: (define x y)
+    if len(elements) > 3 {
+      panic(fmt.Sprint("define: bad syntax (multiple expressions) ", tuple))
+    }
+    pattern := elements[1]
+    value := ParseNode(elements[2])
+    return ast.NewDefine(pattern, value)
+
+  case *ast.Tuple:
+    // case 2: (define (foo x) (bar x y) (bar x))
+    // (define (foo x . (y z)) (bar x) (bar y z))
+    function := ParseFunction(elements[1])
+    body := ParseList(elements[2:])
+    function.Body = body
+    return ast.NewDefine(function.Caller, function)
+  }
+}
+
+func ParseFunction(tuple *ast.Tuple) *ast.Function {
+  // (foo x . (y . (z)))
+  // (((foo x) y) z)
+  // ((foo x) . (y . z))
+  elements := tuple.Elements
 
 }
 
-func ParseDefine(tuple *ast.Tuple) ast.Node {
+func ParseCall(tuple *ast.Tuple) *ast.Call {
 
 }
 
-func ParseCall(tuple *ast.Tuple) ast.Node {
-
+func ParseList(nodes []ast.Node) []ast.Node {
+  var parsed []ast.Node
+  for _, node := range nodes {
+    parsed = append(parsed, ParseNode(node))
+  }
+  return parsed
 }
