@@ -14,7 +14,7 @@ func Parse(l *lexer.Lexer) ast.Node {
   var elements []ast.Node
   elements = append(elements, ast.NewName("seq"))
   elements = append(elements, parser(l, make([]ast.Node, 0), ' ')...)
-  return ast.NewTuple(elements)
+  return ParseNode(ast.NewTuple(elements))
 }
 
 func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {

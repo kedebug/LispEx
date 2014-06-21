@@ -24,7 +24,7 @@ func (self *Lambda) Eval(env *scope.Scope) value.Value {
 }
 
 func (self *Lambda) String() string {
-  s := "(lambda ("
+  s := "lambda ("
   for i, param := range self.Params {
     if i == 0 {
       s += fmt.Sprint(param)
@@ -32,5 +32,5 @@ func (self *Lambda) String() string {
       s += fmt.Sprintf(" %s", param)
     }
   }
-  return ") " + s + fmt.Sprint(self.Body) + ")"
+  return s + ") " + fmt.Sprintf("(%s)", self.Body)
 }
