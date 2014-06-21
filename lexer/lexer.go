@@ -135,7 +135,6 @@ func lexWhiteSpace(l *Lexer) stateFn {
     return lexNumber
   case isAlphaNumeric(r):
     // begin with non-numberic character
-    l.backup()
     return lexIdentifier
   default:
     return l.errorf("Unexpected character: %q", r)
@@ -169,7 +168,7 @@ func lexIdentifier(l *Lexer) stateFn {
 func lexNumber(l *Lexer) stateFn {
   isFloat := false
 
-  l.accept("+-")
+  hasFlag := l.accept("+-")
   digits := "0123456789"
   if l.accept("0") && l.accept("xX") {
     digits = "0123456789abcdefABCDEF"
@@ -189,6 +188,10 @@ func lexNumber(l *Lexer) stateFn {
   if r := l.peek(); isAlphaNumeric(r) {
     l.next()
     return l.errorf("bad number syntax: %q", l.input[l.start:l.pos])
+  }
+
+  if hasFlag && l.start+1 == l.pos {
+    return lexIdentifier
   }
 
   if isFloat {

@@ -2,7 +2,7 @@ package value
 
 type PrimFunc interface {
   Value
-  Apply([]Value) Value
+  Apply(args []Value) Value
 }
 
 type Primitive struct {

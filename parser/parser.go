@@ -97,7 +97,7 @@ func ParseDefine(tuple *ast.Tuple) *ast.Define {
     if len(elements) > 3 {
       panic(fmt.Sprint("define: bad syntax (multiple expressions) ", tuple))
     }
-    pattern := elements[1]
+    pattern := elements[1].(*ast.Name)
     value := ParseNode(elements[2])
     return ast.NewDefine(pattern, value)
 
@@ -124,7 +124,7 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
     // len(elements) must be greater than 0
     switch elements[0].(type) {
     case *ast.Name:
-      return ast.NewFunction(elements[0], lambda)
+      return ast.NewFunction(elements[0].(*ast.Name), lambda)
     case *ast.Tuple:
       tuple = elements[0].(*ast.Tuple)
       lambda = ast.NewLambda(nil, lambda)
@@ -135,7 +135,10 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
 }
 
 func ParseCall(tuple *ast.Tuple) *ast.Call {
-  return nil
+  elements := tuple.Elements
+  callee := ParseNode(elements[0])
+  args := ParseList(elements[1:])
+  return ast.NewCall(callee, args)
 }
 
 func ParseList(nodes []ast.Node) []ast.Node {

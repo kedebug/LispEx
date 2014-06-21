@@ -7,6 +7,9 @@ import (
   "github.com/kedebug/LispEx/value/closure"
 )
 
+// http://docs.racket-lang.org/guide/lambda.html
+// (lambda x body)
+// (lambda (x) body)
 type Lambda struct {
   Params []Node
   Body   Node

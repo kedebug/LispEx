@@ -15,6 +15,7 @@ func NewTuple(elements []Node) *Tuple {
 }
 
 func (self *Tuple) Eval(env *scope.Scope) value.Value {
+  panic("unsupported tuple evaluation")
   return nil
 }
 

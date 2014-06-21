@@ -8,11 +8,11 @@ import (
 
 // ((foo 1) 2)
 type Function struct {
-  Caller Node
+  Caller *Name
   Body   Node
 }
 
-func NewFunction(caller, body Node) *Function {
+func NewFunction(caller *Name, body Node) *Function {
   return &Function{Caller: caller, Body: body}
 }
 

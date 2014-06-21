@@ -7,15 +7,16 @@ import (
 )
 
 type Define struct {
-  Pattern Node
+  Pattern *Name
   Value   Node
 }
 
-func NewDefine(pattern, val Node) *Define {
+func NewDefine(pattern *Name, val Node) *Define {
   return &Define{Pattern: pattern, Value: val}
 }
 
 func (self *Define) Eval(env *scope.Scope) value.Value {
+  env.Put(self.Pattern.Identifier, self.Value.Eval(env))
   return nil
 }
 
