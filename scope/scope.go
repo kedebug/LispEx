@@ -41,15 +41,17 @@ func (self *Scope) Lookup(name string) value.Value {
   if val != nil {
     return val
   } else if self.parent != nil {
-    return self.parent.LookupLocal(name)
+    return self.parent.Lookup(name)
   } else {
     return nil
   }
 }
 
 func (self *Scope) LookupLocal(name string) value.Value {
-  v, _ := self.env[name]
-  return v
+  if v, ok := self.env[name]; ok {
+    return v
+  }
+  return nil
 }
 
 func (self *Scope) FindScope(name string) *Scope {

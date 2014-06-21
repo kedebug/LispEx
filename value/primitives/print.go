@@ -14,6 +14,14 @@ func NewPrint() *Print {
 }
 
 func (self *Print) Apply(args []value.Value) value.Value {
-  fmt.Println(args)
+  var s string
+  for i, arg := range args {
+    if i == 0 {
+      s += arg.String()
+    } else {
+      s += fmt.Sprintf(" %s", arg)
+    }
+  }
+  fmt.Println(s)
   return nil
 }
