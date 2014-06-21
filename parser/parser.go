@@ -104,23 +104,38 @@ func ParseDefine(tuple *ast.Tuple) *ast.Define {
   case *ast.Tuple:
     // case 2: (define (foo x) (bar x y) (bar x))
     // (define (foo x . (y z)) (bar x) (bar y z))
-    function := ParseFunction(elements[1])
-    body := ParseList(elements[2:])
-    function.Body = body
+    tail := ast.NewBlock(ParseList(elements[2:]))
+    function := ParseFunction(elements[1].(*ast.Tuple), tail)
     return ast.NewDefine(function.Caller, function)
+
+  default:
+    panic(fmt.Sprint("unsupported parser type ", elements[1]))
   }
 }
 
-func ParseFunction(tuple *ast.Tuple) *ast.Function {
+func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
   // (foo x . (y . (z)))
   // (((foo x) y) z)
   // ((foo x) . (y . z))
-  elements := tuple.Elements
-
+  lambda := ast.NewLambda(nil, tail)
+  for {
+    elements := tuple.Elements
+    lambda.Params = elements[1:]
+    // len(elements) must be greater than 0
+    switch elements[0].(type) {
+    case *ast.Name:
+      return ast.NewFunction(elements[0], lambda)
+    case *ast.Tuple:
+      tuple = elements[0].(*ast.Tuple)
+      lambda = ast.NewLambda(nil, lambda)
+    default:
+      panic(fmt.Sprint("unsupported parser type ", elements[0]))
+    }
+  }
 }
 
 func ParseCall(tuple *ast.Tuple) *ast.Call {
-
+  return nil
 }
 
 func ParseList(nodes []ast.Node) []ast.Node {
