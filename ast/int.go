@@ -17,19 +17,19 @@ func NewInt(s string) *Int {
   var val int64
   var base int
   var err error
+  var missed string
 
   if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+    missed = s[:2]
     s = s[2:]
     base = 16
   } else {
     base = 10
   }
-
   val, err = strconv.ParseInt(s, base, 64)
   if err != nil {
-    panic(fmt.Sprintf("%s is not integer format", s))
+    panic(fmt.Sprintf("%s is not integer format", missed+s))
   }
-
   return &Int{Value: val, Base: base}
 }
 

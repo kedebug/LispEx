@@ -10,6 +10,6 @@ func NewFloatValue(val float64) *FloatValue {
   return &FloatValue{Value: val}
 }
 
-func (v *FloatValue) String() string {
-  return strconv.FormatFloat(v.Value, 'f', -1, 64)
+func (self *FloatValue) String() string {
+  return strconv.FormatFloat(self.Value, 'f', -1, 64)
 }

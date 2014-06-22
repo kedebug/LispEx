@@ -20,6 +20,7 @@ func NewScope(parent *Scope) *Scope {
 func NewRootScope() *Scope {
   root := NewScope(nil)
   root.Put("+", primitives.NewAdd())
+  root.Put("-", primitives.NewSub())
   root.Put("print", primitives.NewPrint())
   root.Put("#t", value.NewBoolValue(true))
   root.Put("#f", value.NewBoolValue(false))

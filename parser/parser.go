@@ -26,6 +26,9 @@ func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
     case lexer.TokenIntegerLiteral:
       elements = append(elements, ast.NewInt(token.Value))
 
+    case lexer.TokenFloatLiteral:
+      elements = append(elements, ast.NewFloat(token.Value))
+
     case lexer.TokenOpenParen:
       tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), ')'))
       elements = append(elements, tuple)
