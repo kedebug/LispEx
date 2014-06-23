@@ -28,14 +28,7 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     if !ok {
       panic(fmt.Sprint("unexpected type: ", curry.Body))
     }
-    if len(args) != len(lambda.Params) {
-      panic(fmt.Sprint("arguments does not match given number: ", self.Callee))
-    }
-    for i, param := range lambda.Params {
-      // should be fixed here
-      name := param.(*Name)
-      env.Put(name.Identifier, args[i])
-    }
+
     return lambda.Body.Eval(env)
   case value.PrimFunc:
     return callee.(value.PrimFunc).Apply(args)

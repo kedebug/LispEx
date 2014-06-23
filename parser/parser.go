@@ -35,7 +35,7 @@ func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
 
     case lexer.TokenCloseParen:
       if seek != ')' {
-        panic(fmt.Errorf("unmatched closing delimter: '%c'", seek))
+        panic(fmt.Errorf("unmatched closing delimter: `%c'", seek))
       } else if len(elements) == 0 {
         panic(fmt.Errorf("missing procedure expression"))
       }
@@ -96,7 +96,7 @@ func ParseDefine(tuple *ast.Tuple) *ast.Define {
 
   switch elements[1].(type) {
   case *ast.Name:
-    // case 1: (define x y)
+    // (define <variable> <expression>)
     if len(elements) > 3 {
       panic(fmt.Sprint("define: bad syntax (multiple expressions) ", tuple))
     }
@@ -105,8 +105,8 @@ func ParseDefine(tuple *ast.Tuple) *ast.Define {
     return ast.NewDefine(pattern, value)
 
   case *ast.Tuple:
-    // case 2: (define (foo x) (bar x y) (bar x))
-    // (define (foo x . (y z)) (bar x) (bar y z))
+    // (define (<variable> <formals>) <body>)
+    // (define (<variable> . <formal>) <body>)
     tail := ast.NewBlock(ParseList(elements[2:]))
     function := ParseFunction(elements[1].(*ast.Tuple), tail)
     return ast.NewDefine(function.Caller, function)
@@ -117,14 +117,16 @@ func ParseDefine(tuple *ast.Tuple) *ast.Define {
 }
 
 func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
-  // (foo x . (y . (z)))
-  // (((foo x) y) z)
-  // ((foo x) . (y . z))
+  //  expand definition: e.g.
+  //  ((f x) y) <body> =>
+  //  (lambda (x)
+  //    (lambda (y) <body>))
+
   lambda := ast.NewLambda(nil, tail)
   for {
     elements := tuple.Elements
-    lambda.Params = elements[1:]
-    fmt.Println("expand list: ", ExpandList(lambda.Params))
+    lambda.Params = ExpandList(elements[1:])
+
     // len(elements) must be greater than 0
     switch elements[0].(type) {
     case *ast.Name:
@@ -138,44 +140,56 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
   }
 }
 
+// expand definition formals to pairs
 func ExpandList(nodes []ast.Node) ast.Node {
-  dotted := false
+  //(1).
+  //  (define (<variable> <formals>) <body>) equivalent to
+  //  (define <variable>
+  //    (lambda (<formals>) <body>))
+  //(2).
+  //  (define (<variable> . <formal>) <body>) equivalent to
+  //    <formal> should be a single variable
+  //  (define <variable>
+  //    (lambda <formal> <body>))
+
   prev := ast.NewPair(nil, nil)
   curr := ast.NewPair(nil, nil)
+
   front := prev
+  dotted := false
+
+  exists := make(map[string]bool)
 
   for i, node := range nodes {
-    if dotted {
-      switch node.(type) {
-      case *ast.Name:
-        prev.Second = node
-      case *ast.Tuple:
-        elements := node.(*ast.Tuple).Elements
-        prev.Second = ExpandList(elements)
-      }
-      // (f x . (y) . z) should be carefully handled latter
-      break
-    } else {
-      switch node.(type) {
-      case *ast.Name:
-        if node.(*ast.Name).Identifier == "." {
-          // multiple dots will consider latter
-          dotted = true
-          if i+1 == len(nodes) {
-            panic(fmt.Sprint("unexpected `)' after dot"))
+    switch node.(type) {
+    case *ast.Name:
+      id := node.(*ast.Name).Identifier
+      if id == "." {
+        dotted = true
+        if i+1 == len(nodes) {
+          panic(fmt.Sprint("unexpected `)' after dot"))
+        }
+      } else {
+        if _, ok := exists[id]; ok {
+          panic(fmt.Sprint("duplicate argument identifier: ", node))
+        } else {
+          exists[id] = true
+        }
+        if dotted {
+          prev.Second = node
+          // should be the last element
+          if i+1 < len(nodes) {
+            panic(fmt.Sprint("illegal use of `.'"))
           }
         } else {
           curr.First = node
+          prev.Second = curr
+          prev = curr
+          curr = ast.NewPair(nil, nil)
         }
-      case *ast.Tuple:
-        elements := node.(*ast.Tuple).Elements
-        curr.First = ExpandList(elements)
       }
-      if !dotted {
-        prev.Second = curr
-        prev = curr
-        curr = ast.NewPair(nil, nil)
-      }
+    default:
+      panic(fmt.Sprint("illegal argument type: ", node))
     }
   }
   return front.Second
