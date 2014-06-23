@@ -21,5 +21,5 @@ func (self *Function) Eval(env *scope.Scope) value.Value {
 }
 
 func (self *Function) String() string {
-  return fmt.Sprintf("(%s)", self.Body)
+  return fmt.Sprintf("%s", self.Body)
 }

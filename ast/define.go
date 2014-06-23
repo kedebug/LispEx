@@ -2,6 +2,7 @@ package ast
 
 import (
   "fmt"
+  "github.com/kedebug/LispEx/binder"
   "github.com/kedebug/LispEx/scope"
   "github.com/kedebug/LispEx/value"
 )
@@ -16,7 +17,7 @@ func NewDefine(pattern *Name, val Node) *Define {
 }
 
 func (self *Define) Eval(env *scope.Scope) value.Value {
-  env.Put(self.Pattern.Identifier, self.Value.Eval(env))
+  binder.Define(env, self.Pattern.Identifier, self.Value.Eval(env))
   return nil
 }
 

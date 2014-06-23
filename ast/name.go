@@ -14,7 +14,11 @@ func NewName(identifier string) *Name {
 }
 
 func (self *Name) Eval(env *scope.Scope) value.Value {
-  return env.Lookup(self.Identifier)
+  if val := env.Lookup(self.Identifier); val != nil {
+    return val.(value.Value)
+  } else {
+    return nil
+  }
 }
 
 func (self *Name) String() string {

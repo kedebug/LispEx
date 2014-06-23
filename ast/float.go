@@ -16,7 +16,6 @@ func NewFloat(s string) *Float {
   if err != nil {
     panic(fmt.Sprintf("%s is not float format", s))
   }
-  fmt.Println("new float:", val)
   return &Float{Value: val}
 }
 
