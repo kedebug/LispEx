@@ -22,8 +22,3 @@ func (self *PairValue) String() string {
     return fmt.Sprintf("(%s . %s)", self.First, self.Second)
   }
 }
-
-// convert golang slice to lisp pairs
-func SliceToPairs(slice []Value) Value {
-
-}

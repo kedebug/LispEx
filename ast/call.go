@@ -5,6 +5,7 @@ import (
   "github.com/kedebug/LispEx/scope"
   "github.com/kedebug/LispEx/value"
   "github.com/kedebug/LispEx/value/closure"
+  "github.com/kedebug/LispEx/value/converter"
 )
 
 type Call struct {
@@ -28,7 +29,7 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     if !ok {
       panic(fmt.Sprint("unexpected type: ", curry.Body))
     }
-
+    // pairs := converter.SliceToPairs(args)
     return lambda.Body.Eval(env)
   case value.PrimFunc:
     return callee.(value.PrimFunc).Apply(args)

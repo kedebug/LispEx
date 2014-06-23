@@ -7,13 +7,13 @@ import (
 
 type Scope struct {
   parent *Scope
-  env    map[string]interface{}
+  env    map[string]value.Value
 }
 
 func NewScope(parent *Scope) *Scope {
   return &Scope{
     parent: parent,
-    env:    make(map[string]interface{}),
+    env:    make(map[string]value.Value),
   }
 }
 
@@ -27,7 +27,7 @@ func NewRootScope() *Scope {
   return root
 }
 
-func (self *Scope) Put(name string, val interface{}) {
+func (self *Scope) Put(name string, val value.Value) {
   self.env[name] = val
 }
 
@@ -37,7 +37,7 @@ func (self *Scope) PutAll(other *Scope) {
   }
 }
 
-func (self *Scope) Lookup(name string) interface{} {
+func (self *Scope) Lookup(name string) value.Value {
   val := self.LookupLocal(name)
   if val != nil {
     return val
@@ -48,7 +48,7 @@ func (self *Scope) Lookup(name string) interface{} {
   }
 }
 
-func (self *Scope) LookupLocal(name string) interface{} {
+func (self *Scope) LookupLocal(name string) value.Value {
   if v, ok := self.env[name]; ok {
     return v
   }

@@ -8,7 +8,8 @@ import (
 
 func TestParser(t *testing.T) {
   var exprs string = `
-    (define (f z . z) 11)
+    (define ((f x) x y) 11)
+    ((f 1) 2 3)
   `
   block := ParseFromString("Parser", exprs)
   fmt.Println(block)
