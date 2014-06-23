@@ -204,8 +204,9 @@ func lexNumber(l *Lexer) stateFn {
 
 func isAlphaNumeric(r rune) bool {
   switch r {
-  case '>', '<', '=', '-', '+', '*', '/':
+  case '>', '<', '=', '-', '+', '*', '/', '.':
     return true
+  default:
+    return unicode.IsLetter(r) || unicode.IsDigit(r)
   }
-  return unicode.IsLetter(r) || unicode.IsDigit(r)
 }

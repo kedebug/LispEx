@@ -124,6 +124,7 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
   for {
     elements := tuple.Elements
     lambda.Params = elements[1:]
+    fmt.Println("expand list: ", ExpandList(lambda.Params))
     // len(elements) must be greater than 0
     switch elements[0].(type) {
     case *ast.Name:
@@ -135,6 +136,49 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
       panic(fmt.Sprint("unsupported parser type ", elements[0]))
     }
   }
+}
+
+func ExpandList(nodes []ast.Node) ast.Node {
+  dotted := false
+  prev := ast.NewPair(nil, nil)
+  curr := ast.NewPair(nil, nil)
+  front := prev
+
+  for i, node := range nodes {
+    if dotted {
+      switch node.(type) {
+      case *ast.Name:
+        prev.Second = node
+      case *ast.Tuple:
+        elements := node.(*ast.Tuple).Elements
+        prev.Second = ExpandList(elements)
+      }
+      // (f x . (y) . z) should be carefully handled latter
+      break
+    } else {
+      switch node.(type) {
+      case *ast.Name:
+        if node.(*ast.Name).Identifier == "." {
+          // multiple dots will consider latter
+          dotted = true
+          if i+1 == len(nodes) {
+            panic(fmt.Sprint("unexpected `)' after dot"))
+          }
+        } else {
+          curr.First = node
+        }
+      case *ast.Tuple:
+        elements := node.(*ast.Tuple).Elements
+        curr.First = ExpandList(elements)
+      }
+      if !dotted {
+        prev.Second = curr
+        prev = curr
+        curr = ast.NewPair(nil, nil)
+      }
+    }
+  }
+  return front.Second
 }
 
 func ParseCall(tuple *ast.Tuple) *ast.Call {
