@@ -3,6 +3,7 @@ package primitives
 import (
   "fmt"
   "github.com/kedebug/LispEx/value"
+  "github.com/kedebug/LispEx/value/converter"
 )
 
 type Sub struct {
@@ -13,10 +14,11 @@ func NewSub() value.Value {
   return &Sub{value.Primitive{"-"}}
 }
 
-func (self *Sub) Apply(args []value.Value) value.Value {
+func (self *Sub) Apply(pairs value.Value) value.Value {
   var val float64
   isfloat := false
 
+  args := converter.PairsToSlice(pairs)
   if len(args) == 0 {
     panic(fmt.Sprint("'-' argument unmatch: expected at least 1"))
   } else if len(args) > 1 {

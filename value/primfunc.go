@@ -1,8 +1,9 @@
 package value
 
+// primitive functions only support pair arguments
 type PrimFunc interface {
   Value
-  Apply(args []Value) Value
+  Apply(pairs Value) Value
 }
 
 type Primitive struct {

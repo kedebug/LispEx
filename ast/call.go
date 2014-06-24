@@ -19,7 +19,7 @@ func NewCall(callee Node, args []Node) *Call {
 
 func (self *Call) Eval(s *scope.Scope) value.Value {
   callee := self.Callee.Eval(s)
-  args := EvalList(self.Args, s)
+  args := converter.SliceToPairs(EvalList(self.Args, s))
 
   switch callee.(type) {
   case *closure.Closure:
@@ -29,7 +29,9 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     if !ok {
       panic(fmt.Sprint("unexpected type: ", curry.Body))
     }
-    // pairs := converter.SliceToPairs(args)
+    // bind call arguments to parameters
+    // these nodes should be in Lisp pair structure
+    BindArguments(env, lambda.Params, args)
     return lambda.Body.Eval(env)
   case value.PrimFunc:
     return callee.(value.PrimFunc).Apply(args)
@@ -44,4 +46,31 @@ func (self *Call) String() string {
     s += fmt.Sprintf(" %s", arg)
   }
   return fmt.Sprintf("(%s%s)", self.Callee, s)
+}
+
+func BindArguments(env *scope.Scope, params Node, args value.Value) {
+  for {
+    if params == nil && args == nil {
+      return
+    } else if params == nil && args != nil {
+      panic(fmt.Sprint("too many arguments"))
+    } else if params != nil && args == nil {
+      panic(fmt.Sprint("missing arguments"))
+    }
+    switch params.(type) {
+    case *Pair:
+      // R5RS declare first element must be a *Name*
+      name, _ := params.(*Pair).First.(*Name)
+      pair, ok := args.(*value.PairValue)
+      if !ok {
+        panic(fmt.Sprint("arguments does not match given number"))
+      }
+      env.Put(name.Identifier, pair.First)
+      params = params.(*Pair).Second
+      args = pair.Second
+    case *Name:
+      env.Put(params.(*Name).Identifier, args)
+      return
+    }
+  }
 }
