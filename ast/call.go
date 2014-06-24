@@ -34,7 +34,6 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     BindArguments(env, lambda.Params, converter.SliceToPairs(args))
     return lambda.Body.Eval(env)
   case value.PrimFunc:
-    fmt.Println("args: ", args)
     return callee.(value.PrimFunc).Apply(args)
   default:
     panic(fmt.Sprint("calling non-function: ", callee))

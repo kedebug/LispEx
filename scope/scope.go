@@ -24,6 +24,7 @@ func NewRootScope() *Scope {
   root.Put("print", primitives.NewPrint())
   root.Put("car", primitives.NewCar())
   root.Put("cdr", primitives.NewCdr())
+  root.Put("cons", primitives.NewCons())
   root.Put("#t", value.NewBoolValue(true))
   root.Put("#f", value.NewBoolValue(false))
   return root
