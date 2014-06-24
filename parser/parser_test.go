@@ -9,7 +9,11 @@ import (
 func TestParser(t *testing.T) {
   var exprs string = `
     (define ((f x) . y) (print x) (print y))
-    ((f 1) 2 3)
+    (lambda x body)
+    (lambda (x) body)
+    (lambda (x y . z) body)
+    (lambda () body)
+    ((lambda (x y) (+ x y)) 1 2)
   `
   block := ParseFromString("Parser", exprs)
   fmt.Println(block)

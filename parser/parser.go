@@ -36,8 +36,6 @@ func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
     case lexer.TokenCloseParen:
       if seek != ')' {
         panic(fmt.Errorf("unmatched closing delimter: `%c'", seek))
-      } else if len(elements) == 0 {
-        panic(fmt.Errorf("missing procedure expression"))
       }
       return elements
 
@@ -71,11 +69,16 @@ func ParseNode(node ast.Node) ast.Node {
       return ParseBlock(tuple)
     case "define":
       return ParseDefine(tuple)
+    case "lambda":
+      return ParseLambda(tuple)
     default:
       return ParseCall(tuple)
     }
   case *ast.Tuple:
-    // ((foo 1) 2)
+    //(1). currying
+    //  ((foo <arguments>) <arguments>)
+    //(2). lambda
+    //  ((lambda <formals> <body>) <arguments>)
     return ParseCall(tuple)
   default:
     panic(fmt.Errorf("unexpected node: %s", elements[0]))
@@ -197,9 +200,43 @@ func ExpandList(nodes []ast.Node) ast.Node {
 
 func ParseCall(tuple *ast.Tuple) *ast.Call {
   elements := tuple.Elements
+  if len(elements) == 0 {
+    panic(fmt.Sprint("missing procedure expression"))
+  }
   callee := ParseNode(elements[0])
   args := ParseList(elements[1:])
   return ast.NewCall(callee, args)
+}
+
+func ParseLambda(tuple *ast.Tuple) *ast.Lambda {
+  // (lambda <formals> <body>)
+  // switch <formals>:
+  //  (<variable1> ...)
+  //  <variable>
+  //  (<variable1> ... <variablen> . <variablen+1>)
+
+  elements := tuple.Elements
+  if len(elements) < 3 {
+    panic(fmt.Sprint("lambda: bad syntax: ", tuple))
+  }
+  pattern := elements[1]
+  body := ast.NewBlock(ParseList(elements[2:]))
+
+  switch pattern.(type) {
+  case *ast.Name:
+    return ast.NewLambda(pattern, body)
+  case *ast.Tuple:
+    formals := ExpandList(pattern.(*ast.Tuple).Elements)
+    _, ok := formals.(*ast.Pair)
+    if ok || formals == nil {
+      return ast.NewLambda(formals, body)
+    } else {
+      // (. <variable>) is not allowed
+      panic(fmt.Sprint("lambda: illegal use of `.'"))
+    }
+  default:
+    panic(fmt.Sprint("unsupported parser type ", pattern))
+  }
 }
 
 func ParseList(nodes []ast.Node) []ast.Node {
