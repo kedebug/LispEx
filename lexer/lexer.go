@@ -22,6 +22,7 @@ const (
   TokenFloatLiteral
   TokenBooleanLiteral
 
+  TokenQuote
   TokenOpenParen
   TokenCloseParen
   TokenOpenSquare
