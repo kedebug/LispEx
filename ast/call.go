@@ -19,7 +19,7 @@ func NewCall(callee Node, args []Node) *Call {
 
 func (self *Call) Eval(s *scope.Scope) value.Value {
   callee := self.Callee.Eval(s)
-  args := converter.SliceToPairs(EvalList(self.Args, s))
+  args := EvalList(self.Args, s)
 
   switch callee.(type) {
   case *closure.Closure:
@@ -31,9 +31,10 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     }
     // bind call arguments to parameters
     // these nodes should be in Lisp pair structure
-    BindArguments(env, lambda.Params, args)
+    BindArguments(env, lambda.Params, converter.SliceToPairs(args))
     return lambda.Body.Eval(env)
   case value.PrimFunc:
+    fmt.Println("args: ", args)
     return callee.(value.PrimFunc).Apply(args)
   default:
     panic(fmt.Sprint("calling non-function: ", callee))
@@ -50,11 +51,11 @@ func (self *Call) String() string {
 
 func BindArguments(env *scope.Scope, params Node, args value.Value) {
   for {
-    if params == nil && args == nil {
+    if params == NilPair && args == value.NilPairValue {
       return
-    } else if params == nil && args != nil {
+    } else if params == NilPair && args != value.NilPairValue {
       panic(fmt.Sprint("too many arguments"))
-    } else if params != nil && args == nil {
+    } else if params != NilPair && args == value.NilPairValue {
       panic(fmt.Sprint("missing arguments"))
     }
     switch params.(type) {

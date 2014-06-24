@@ -3,7 +3,6 @@ package primitives
 import (
   "fmt"
   "github.com/kedebug/LispEx/value"
-  "github.com/kedebug/LispEx/value/converter"
 )
 
 type Add struct {
@@ -14,12 +13,11 @@ func NewAdd() value.Value {
   return &Add{value.Primitive{"+"}}
 }
 
-func (self *Add) Apply(pairs value.Value) value.Value {
+func (self *Add) Apply(args []value.Value) value.Value {
   var val1 int64
   var val2 float64
   isfloat := false
 
-  args := converter.PairsToSlice(pairs)
   for _, arg := range args {
     switch arg.(type) {
     case *value.IntValue:

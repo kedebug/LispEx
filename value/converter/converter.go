@@ -6,7 +6,7 @@ import (
 
 // convert golang slice to lisp pairs
 func SliceToPairs(slice []value.Value) value.Value {
-  var front value.Value
+  var front value.Value = value.NilPairValue
   for i := len(slice) - 1; i >= 0; i-- {
     front = value.NewPairValue(slice[i], front)
   }
@@ -17,7 +17,7 @@ func SliceToPairs(slice []value.Value) value.Value {
 func PairsToSlice(pairs value.Value) []value.Value {
   slice := make([]value.Value, 0)
   for {
-    if pairs == nil {
+    if pairs == nil || pairs == value.NilPairValue {
       break
     }
     switch pairs.(type) {
