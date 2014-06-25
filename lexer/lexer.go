@@ -131,6 +131,8 @@ func lexWhiteSpace(l *Lexer) stateFn {
     return lexOpenParen
   case r == ')':
     return lexCloseParen
+  case r == '\'':
+    return lexQuote
   case r == '+' || r == '-' || ('0' <= r && r <= '9'):
     l.backup()
     return lexNumber
@@ -145,6 +147,11 @@ func lexWhiteSpace(l *Lexer) stateFn {
 func lexEOF(l *Lexer) stateFn {
   l.emit(TokenEOF)
   return nil
+}
+
+func lexQuote(l *Lexer) stateFn {
+  l.emit(TokenQuote)
+  return lexWhiteSpace
 }
 
 func lexOpenParen(l *Lexer) stateFn {

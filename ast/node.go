@@ -5,8 +5,11 @@ import (
   "github.com/kedebug/LispEx/value"
 )
 
+// Node can be seen as Value =>
+//  ' : The single quote character is used to indicate literal data
+//  ` : The backquote character is used to indicate almost-constant data
 type Node interface {
-  String() string
+  value.Value
   Eval(s *scope.Scope) value.Value
 }
 

@@ -21,7 +21,7 @@ func NewEmptyPair() *EmptyPair {
 }
 
 func (self *EmptyPair) Eval(s *scope.Scope) value.Value {
-  return nil
+  return value.NilPairValue
 }
 
 func (self *EmptyPair) String() string {
@@ -36,7 +36,22 @@ func NewPair(first, second Node) *Pair {
 }
 
 func (self *Pair) Eval(env *scope.Scope) value.Value {
-  return value.NewPairValue(self.First.Eval(env), self.Second.Eval(env))
+  var first value.Value
+  if _, ok := self.First.(*Pair); ok {
+    first = self.First.Eval(env)
+  } else {
+    // treat Node as Value
+    first = self.First
+  }
+  if self.Second == NilPair {
+    return value.NewPairValue(first, nil)
+  }
+  switch self.Second.(type) {
+  case *Pair:
+    return value.NewPairValue(first, self.Second.Eval(env))
+  default:
+    return value.NewPairValue(first, self.Second)
+  }
 }
 
 func (self *Pair) String() string {

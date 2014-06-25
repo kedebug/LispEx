@@ -11,8 +11,7 @@ func ParseFromString(name, program string) ast.Node {
 }
 
 func Parse(l *lexer.Lexer) ast.Node {
-  var elements []ast.Node
-  elements = append(elements, ast.NewName("seq"))
+  elements := []ast.Node{ast.NewName("seq")}
   elements = append(elements, parser(l, make([]ast.Node, 0), ' ')...)
   return ParseNode(ast.NewTuple(elements))
 }
@@ -22,32 +21,33 @@ func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
     switch token.Type {
     case lexer.TokenIdentifier:
       elements = append(elements, ast.NewName(token.Value))
-
     case lexer.TokenIntegerLiteral:
       elements = append(elements, ast.NewInt(token.Value))
-
     case lexer.TokenFloatLiteral:
       elements = append(elements, ast.NewFloat(token.Value))
-
+    case lexer.TokenQuote:
+      quote := []ast.Node{ast.NewName("quote")}
+      quote = append(quote, parser(l, make([]ast.Node, 0), '\'')...)
+      elements = append(elements, ast.NewTuple(quote))
     case lexer.TokenOpenParen:
       tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), ')'))
       elements = append(elements, tuple)
-
     case lexer.TokenCloseParen:
       if seek != ')' {
-        panic(fmt.Errorf("unmatched closing delimter: `%c'", seek))
+        panic(fmt.Sprint("read: unexpected `)'"))
       }
       return elements
-
     case lexer.TokenError:
       panic(fmt.Errorf("token error: %s", token.Value))
-
     default:
       panic(fmt.Errorf("unexpected token type: %v", token.Type))
     }
+    if seek == '\'' {
+      return elements
+    }
   }
   if seek != ' ' {
-    panic(fmt.Errorf("unclosed delimeter, expected: '%c'", seek))
+    panic(fmt.Errorf("unclosed delimeter, expected: `%c'", seek))
   }
   return elements
 }
@@ -67,6 +67,8 @@ func ParseNode(node ast.Node) ast.Node {
     switch name.Identifier {
     case "seq":
       return ParseBlock(tuple)
+    case "quote":
+      return ParseQuote(tuple)
     case "define":
       return ParseDefine(tuple)
     case "lambda":
@@ -89,6 +91,20 @@ func ParseBlock(tuple *ast.Tuple) *ast.Block {
   elements := tuple.Elements
   exprs := ParseList(elements)
   return ast.NewBlock(exprs)
+}
+
+func ParseQuote(tuple *ast.Tuple) *ast.Quote {
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprint("quote: wrong number of parts"))
+  }
+  switch elements[1].(type) {
+  case *ast.Tuple:
+    slice := elements[1].(*ast.Tuple).Elements
+    return ast.NewQuote(ExpandList(slice))
+  default:
+    return ast.NewQuote(elements[1])
+  }
 }
 
 func ParseDefine(tuple *ast.Tuple) *ast.Define {
@@ -128,7 +144,7 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
   lambda := ast.NewLambda(nil, tail)
   for {
     elements := tuple.Elements
-    lambda.Params = ExpandList(elements[1:])
+    lambda.Params = ExpandFormals(elements[1:])
 
     // len(elements) must be greater than 0
     switch elements[0].(type) {
@@ -141,61 +157,6 @@ func ParseFunction(tuple *ast.Tuple, tail ast.Node) *ast.Function {
       panic(fmt.Sprint("unsupported parser type ", elements[0]))
     }
   }
-}
-
-// expand definition formals to pairs
-func ExpandList(nodes []ast.Node) ast.Node {
-  //(1).
-  //  (define (<variable> <formals>) <body>) equivalent to
-  //  (define <variable>
-  //    (lambda (<formals>) <body>))
-  //(2).
-  //  (define (<variable> . <formal>) <body>) equivalent to
-  //    <formal> should be a single variable
-  //  (define <variable>
-  //    (lambda <formal> <body>))
-
-  prev := ast.NewPair(nil, nil)
-  curr := ast.NewPair(nil, nil)
-
-  front := prev
-  dotted := false
-
-  exists := make(map[string]bool)
-
-  for i, node := range nodes {
-    switch node.(type) {
-    case *ast.Name:
-      id := node.(*ast.Name).Identifier
-      if id == "." {
-        dotted = true
-        if i+1 == len(nodes) {
-          panic(fmt.Sprint("unexpected `)' after dot"))
-        }
-      } else {
-        if _, ok := exists[id]; ok {
-          panic(fmt.Sprint("duplicate argument identifier: ", node))
-        } else {
-          exists[id] = true
-        }
-        if dotted {
-          prev.Second = node
-          // should be the last element
-          if i+1 < len(nodes) {
-            panic(fmt.Sprint("illegal use of `.'"))
-          }
-        } else {
-          curr.First = node
-          prev.Second = curr
-          prev = curr
-          curr = ast.NewPair(nil, nil)
-        }
-      }
-    default:
-      panic(fmt.Sprint("illegal argument type: ", node))
-    }
-  }
-  return front.Second
 }
 
 func ParseCall(tuple *ast.Tuple) *ast.Call {
@@ -226,7 +187,7 @@ func ParseLambda(tuple *ast.Tuple) *ast.Lambda {
   case *ast.Name:
     return ast.NewLambda(pattern, body)
   case *ast.Tuple:
-    formals := ExpandList(pattern.(*ast.Tuple).Elements)
+    formals := ExpandFormals(pattern.(*ast.Tuple).Elements)
     _, ok := formals.(*ast.Pair)
     if ok || formals == nil {
       return ast.NewLambda(formals, body)
