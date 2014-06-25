@@ -12,3 +12,22 @@ func SliceToPairValues(slice []value.Value) value.Value {
   }
   return front
 }
+
+// convert lisp pairs to golang slice
+func PairsToSlice(pairs value.Value) []value.Value {
+  slice := make([]value.Value, 0)
+  for {
+    if pairs == nil || pairs == value.NilPairValue {
+      break
+    }
+    switch pairs.(type) {
+    case *value.PairValue:
+      pair := pairs.(*value.PairValue)
+      slice = append(slice, pair.First)
+      pairs = pair.Second
+    default:
+      panic("can not convert pairs to slice")
+    }
+  }
+  return slice
+}
