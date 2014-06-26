@@ -37,21 +37,54 @@ func NewPair(first, second Node) *Pair {
 
 func (self *Pair) Eval(env *scope.Scope) value.Value {
   var first value.Value
+  var second value.Value
+
+  if self.Second == NilPair {
+    second = value.NilPairValue
+  } else {
+    switch self.Second.(type) {
+    case *Pair:
+      second = self.Second.Eval(env)
+    default:
+      second = self.Second
+    }
+  }
+
   if _, ok := self.First.(*Name); ok {
     // treat Name as Value
     first = self.First
+  } else if _, ok := self.First.(*UnquoteSplicing); ok {
+    // our parser garantees unquote-splicing only appears in quasiquote
+    // and unquote-splicing will be evaluated to a list
+    first = self.First.Eval(env)
+    // () empty list must be handled
+    if first == value.NilPairValue {
+      return second
+    }
+    // seek for the last element
+    var last value.Value = first
+    for {
+      switch last.(type) {
+      case *value.PairValue:
+        pair := last.(*value.PairValue)
+        if pair.Second == value.NilPairValue {
+          pair.Second = second
+          return first
+        }
+        last = pair.Second
+      default:
+        if second == value.NilPairValue {
+          return first
+        } else {
+          // `(,@(cdr '(1 . 2) 3))
+          panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", first))
+        }
+      }
+    }
   } else {
     first = self.First.Eval(env)
   }
-  if self.Second == NilPair {
-    return value.NewPairValue(first, nil)
-  }
-  switch self.Second.(type) {
-  case *Pair:
-    return value.NewPairValue(first, self.Second.Eval(env))
-  default:
-    return value.NewPairValue(first, self.Second)
-  }
+  return value.NewPairValue(first, second)
 }
 
 func (self *Pair) String() string {

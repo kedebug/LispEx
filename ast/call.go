@@ -36,7 +36,7 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
   case value.PrimFunc:
     return callee.(value.PrimFunc).Apply(args)
   default:
-    panic(fmt.Sprint("calling non-function: ", callee))
+    panic(fmt.Sprintf("%s: not allowed in a call context", self.Callee))
   }
 }
 

@@ -13,9 +13,10 @@ func TestParser(t *testing.T) {
     (print (cdr (cdr '(1 2 . '(3 x)))))
     (print (car (car '('(1) 2))))
     (print (cons 1 '(2)))
+    (print ((lambda (x y) (+ x y)) 10 20))
   `
-  exprs += "`(,(cons 1 2) ,@(1 2 3) 2 3)"
-  // `(,@(cons 1 '(2)) 3)
+  exprs += "`(,(cons 1 2) ,@(cons 1 '(2)) x y)"
+
   block := ParseFromString("Parser", exprs)
   fmt.Println(block)
   scope.NewRootScope()

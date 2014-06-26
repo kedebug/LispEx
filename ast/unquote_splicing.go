@@ -7,15 +7,28 @@ import (
 )
 
 type UnquoteSplicing struct {
-  Body Node
+  Body      Node
+  IsLiteral bool
 }
 
-func NewUnquoteSplicing(body Node) *UnquoteSplicing {
-  return &UnquoteSplicing{Body: body}
+func NewUnquoteSplicing(body Node, isliteral bool) *UnquoteSplicing {
+  return &UnquoteSplicing{Body: body, IsLiteral: isliteral}
 }
 
 func (self *UnquoteSplicing) Eval(env *scope.Scope) value.Value {
-  return self.Body.Eval(env)
+  evaluated := self.Body.Eval(env)
+  if !self.IsLiteral {
+    switch evaluated.(type) {
+    case *value.PairValue:
+      return evaluated
+    case *value.EmptyPairValue:
+      return evaluated
+    default:
+      panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", evaluated))
+    }
+  } else {
+    return value.NewPairValue(evaluated, nil)
+  }
 }
 
 func (self *UnquoteSplicing) String() string {

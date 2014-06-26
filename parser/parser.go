@@ -184,7 +184,8 @@ func ParseUnquoteSplicing(tuple *ast.Tuple) *ast.UnquoteSplicing {
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
   }
-  return ast.NewUnquoteSplicing(ParseNode(elements[1]))
+  _, istuple := elements[1].(*ast.Tuple)
+  return ast.NewUnquoteSplicing(ParseNode(elements[1]), !istuple)
 }
 
 func ParseDefine(tuple *ast.Tuple) *ast.Define {
