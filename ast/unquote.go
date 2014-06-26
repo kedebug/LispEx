@@ -19,5 +19,5 @@ func (self *Unquote) Eval(env *scope.Scope) value.Value {
 }
 
 func (self *Unquote) String() string {
-  return fmt.Sprintf("(unquote %s)", self.Body)
+  return fmt.Sprintf(",%s", self.Body)
 }

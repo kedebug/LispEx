@@ -26,9 +26,9 @@ func (self *Block) String() string {
   var s string
   for i, expr := range self.Exprs {
     if i == 0 {
-      s += fmt.Sprint(expr)
+      s += fmt.Sprintf("%s", expr)
     } else {
-      s += fmt.Sprintf(" %s", expr)
+      s += fmt.Sprintf("\n%s", expr)
     }
   }
   return s

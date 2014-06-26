@@ -19,6 +19,7 @@ func NewScope(parent *Scope) *Scope {
 
 func NewRootScope() *Scope {
   root := NewScope(nil)
+  root.Put("seq", value.NewStringValue("seq"))
   root.Put("+", primitives.NewAdd())
   root.Put("-", primitives.NewSub())
   root.Put("print", primitives.NewPrint())

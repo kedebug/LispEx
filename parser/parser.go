@@ -86,6 +86,14 @@ func ParseNode(node ast.Node) ast.Node {
       return ParseBlock(tuple)
     case "quote":
       return ParseQuote(tuple)
+    case "quasiquote":
+      // parse "unquote" and "unquote-splicing" in "quasiquote"
+      // so they never go through ParseNode
+      return ParseQuasiquote(tuple)
+    case "unquote":
+      panic(fmt.Sprint("unquote: not in quasiquote"))
+    case "unquote-splicing":
+      panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
     case "define":
       return ParseDefine(tuple)
     case "lambda":
@@ -100,7 +108,7 @@ func ParseNode(node ast.Node) ast.Node {
     //  ((lambda <formals> <body>) <arguments>)
     return ParseCall(tuple)
   default:
-    panic(fmt.Errorf("unexpected node: %s", elements[0]))
+    panic(fmt.Sprintf("%s: not a procedure", tuple))
   }
 }
 
@@ -111,6 +119,9 @@ func ParseBlock(tuple *ast.Tuple) *ast.Block {
 }
 
 func ParseQuote(tuple *ast.Tuple) *ast.Quote {
+  // (quote <datum>)
+  // '<datum>
+
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("quote: wrong number of parts"))
@@ -125,7 +136,55 @@ func ParseQuote(tuple *ast.Tuple) *ast.Quote {
 }
 
 func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
+  // (quasiquote <qq template>)
+  // `<qq template>
 
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprint("quasiquote: wrong number of parts"))
+  }
+  switch elements[1].(type) {
+  case *ast.Tuple:
+    // `(1 ,(+ 1 1) ,@(cdr '(2 3 4)))
+    qqt := elements[1].(*ast.Tuple).Elements
+    slice := make([]ast.Node, 0, len(qqt))
+    for _, node := range qqt {
+      if tuple, ok := node.(*ast.Tuple); ok {
+        if len(tuple.Elements) == 0 {
+          panic("missing procedure expression, given: ()")
+        }
+        if name, ok := tuple.Elements[0].(*ast.Name); ok {
+          if name.Identifier == "unquote" {
+            // ,(+ 1 1)
+            node = ParseUnquote(tuple)
+          } else if name.Identifier == "unquote-splicing" {
+            // ,@(cdr '(2 3 4))
+            node = ParseUnquoteSplicing(tuple)
+          }
+        }
+      }
+      slice = append(slice, node)
+    }
+    return ast.NewQuasiquote(ExpandList(slice))
+  default:
+    return ast.NewQuasiquote(elements[1])
+  }
+}
+
+func ParseUnquote(tuple *ast.Tuple) *ast.Unquote {
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprint("unquote: wrong number of parts"))
+  }
+  return ast.NewUnquote(ParseNode(elements[1]))
+}
+
+func ParseUnquoteSplicing(tuple *ast.Tuple) *ast.UnquoteSplicing {
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
+  }
+  return ast.NewUnquoteSplicing(ParseNode(elements[1]))
 }
 
 func ParseDefine(tuple *ast.Tuple) *ast.Define {

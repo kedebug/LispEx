@@ -8,8 +8,8 @@ import (
 
 // Literal expressions
 //  Body is represented as Pairs (list)
-//  the list only contains Pair or Name
-//  the Name would be treated as Value
+//  the list only contains Pair, Name or literal nodes
+//  the Name would be treated as Value (see Pair.Eval)
 type Quote struct {
   Body Node
 }

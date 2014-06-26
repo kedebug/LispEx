@@ -8,6 +8,6 @@ func NewStringValue(val string) *StringValue {
   return &StringValue{Value: val}
 }
 
-func (v *StringValue) String() string {
-  return v.Value
+func (self *StringValue) String() string {
+  return self.Value
 }
