@@ -23,6 +23,10 @@ const (
   TokenBooleanLiteral
 
   TokenQuote
+  TokenQuasiquote
+  TokenUnquote
+  TokenUnquoteSplicing
+
   TokenOpenParen
   TokenCloseParen
   TokenOpenSquare
@@ -133,6 +137,10 @@ func lexWhiteSpace(l *Lexer) stateFn {
     return lexCloseParen
   case r == '\'':
     return lexQuote
+  case r == '`':
+    return lexQuasiquote
+  case r == ',':
+    return lexUnquote
   case r == '+' || r == '-' || ('0' <= r && r <= '9'):
     l.backup()
     return lexNumber
@@ -151,6 +159,26 @@ func lexEOF(l *Lexer) stateFn {
 
 func lexQuote(l *Lexer) stateFn {
   l.emit(TokenQuote)
+  return lexWhiteSpace
+}
+
+func lexQuasiquote(l *Lexer) stateFn {
+  l.emit(TokenQuasiquote)
+  return lexWhiteSpace
+}
+
+func lexUnquote(l *Lexer) stateFn {
+  hasAt := l.accept("@")
+  if !hasAt {
+    l.emit(TokenUnquote)
+  } else {
+    l.emit(TokenUnquoteSplicing)
+  }
+  return lexWhiteSpace
+}
+
+func lexUnquoteSplicing(l *Lexer) stateFn {
+  l.emit(TokenUnquoteSplicing)
   return lexWhiteSpace
 }
 
@@ -211,10 +239,8 @@ func lexNumber(l *Lexer) stateFn {
 }
 
 func isAlphaNumeric(r rune) bool {
-  switch r {
-  case '>', '<', '=', '-', '+', '*', '/', '.':
+  if strings.IndexRune("!#$%&|*+-/:<=>?@^_~", r) >= 0 {
     return true
-  default:
-    return unicode.IsLetter(r) || unicode.IsDigit(r)
   }
+  return r == '.' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }

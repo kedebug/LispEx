@@ -12,42 +12,59 @@ func ParseFromString(name, program string) ast.Node {
 
 func Parse(l *lexer.Lexer) ast.Node {
   elements := []ast.Node{ast.NewName("seq")}
-  elements = append(elements, parser(l, make([]ast.Node, 0), ' ')...)
+  elements = append(elements, parser(l, make([]ast.Node, 0), " ")...)
   return ParseNode(ast.NewTuple(elements))
 }
 
-func parser(l *lexer.Lexer, elements []ast.Node, seek rune) []ast.Node {
+func parser(l *lexer.Lexer, elements []ast.Node, delimiter string) []ast.Node {
   for token := l.NextToken(); token.Type != lexer.TokenEOF; token = l.NextToken() {
     switch token.Type {
     case lexer.TokenIdentifier:
       elements = append(elements, ast.NewName(token.Value))
+
     case lexer.TokenIntegerLiteral:
       elements = append(elements, ast.NewInt(token.Value))
     case lexer.TokenFloatLiteral:
       elements = append(elements, ast.NewFloat(token.Value))
-    case lexer.TokenQuote:
-      quote := []ast.Node{ast.NewName("quote")}
-      quote = append(quote, parser(l, make([]ast.Node, 0), '\'')...)
-      elements = append(elements, ast.NewTuple(quote))
+
     case lexer.TokenOpenParen:
-      tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), ')'))
+      tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), "("))
       elements = append(elements, tuple)
     case lexer.TokenCloseParen:
-      if seek != ')' {
+      if delimiter != "(" {
         panic(fmt.Sprint("read: unexpected `)'"))
       }
       return elements
+
+    case lexer.TokenQuote:
+      quote := []ast.Node{ast.NewName("quote")}
+      quote = append(quote, parser(l, make([]ast.Node, 0), "'")...)
+      elements = append(elements, ast.NewTuple(quote))
+    case lexer.TokenQuasiquote:
+      quasiquote := []ast.Node{ast.NewName("quasiquote")}
+      quasiquote = append(quasiquote, parser(l, make([]ast.Node, 0), "`")...)
+      elements = append(elements, ast.NewTuple(quasiquote))
+    case lexer.TokenUnquote:
+      unquote := []ast.Node{ast.NewName("unquote")}
+      unquote = append(unquote, parser(l, make([]ast.Node, 0), ",")...)
+      elements = append(elements, ast.NewTuple(unquote))
+    case lexer.TokenUnquoteSplicing:
+      unquoteSplicing := []ast.Node{ast.NewName("unquote-splicing")}
+      unquoteSplicing = append(unquoteSplicing, parser(l, make([]ast.Node, 0), ",@")...)
+      elements = append(elements, ast.NewTuple(unquoteSplicing))
+
     case lexer.TokenError:
       panic(fmt.Errorf("token error: %s", token.Value))
     default:
       panic(fmt.Errorf("unexpected token type: %v", token.Type))
     }
-    if seek == '\'' {
+
+    if delimiter == "'" || delimiter == "`" || delimiter == "," || delimiter == ",@" {
       return elements
     }
   }
-  if seek != ' ' {
-    panic(fmt.Errorf("unclosed delimeter, expected: `%c'", seek))
+  if delimiter != " " {
+    panic(fmt.Errorf("unclosed delimeter, expected: `%s'", delimiter))
   }
   return elements
 }
@@ -105,6 +122,10 @@ func ParseQuote(tuple *ast.Tuple) *ast.Quote {
   default:
     return ast.NewQuote(elements[1])
   }
+}
+
+func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
+
 }
 
 func ParseDefine(tuple *ast.Tuple) *ast.Define {

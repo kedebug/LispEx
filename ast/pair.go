@@ -37,11 +37,11 @@ func NewPair(first, second Node) *Pair {
 
 func (self *Pair) Eval(env *scope.Scope) value.Value {
   var first value.Value
-  if _, ok := self.First.(*Pair); ok {
-    first = self.First.Eval(env)
-  } else {
-    // treat Node as Value
+  if _, ok := self.First.(*Name); ok {
+    // treat Name as Value
     first = self.First
+  } else {
+    first = self.First.Eval(env)
   }
   if self.Second == NilPair {
     return value.NewPairValue(first, nil)

@@ -6,6 +6,10 @@ import (
   "github.com/kedebug/LispEx/value"
 )
 
+// Literal expressions
+//  Body is represented as Pairs (list)
+//  the list only contains Pair or Name
+//  the Name would be treated as Value
 type Quote struct {
   Body Node
 }
@@ -19,5 +23,5 @@ func (self *Quote) Eval(env *scope.Scope) value.Value {
 }
 
 func (self *Quote) String() string {
-  return fmt.Sprintf("(quote %s)", self.Body)
+  return fmt.Sprintf("'%s", self.Body)
 }
