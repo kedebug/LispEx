@@ -9,7 +9,7 @@ type Cdr struct {
   value.Primitive
 }
 
-func NewCdr() value.Value {
+func NewCdr() *Cdr {
   return &Cdr{value.Primitive{"cdr"}}
 }
 

@@ -9,7 +9,7 @@ type Sub struct {
   value.Primitive
 }
 
-func NewSub() value.Value {
+func NewSub() *Sub {
   return &Sub{value.Primitive{"-"}}
 }
 
@@ -18,7 +18,7 @@ func (self *Sub) Apply(args []value.Value) value.Value {
   isfloat := false
 
   if len(args) == 0 {
-    panic(fmt.Sprint("'-' argument unmatch: expected at least 1"))
+    panic(fmt.Sprint("`-' argument unmatch: expected at least 1"))
   } else if len(args) > 1 {
     switch args[0].(type) {
     case *value.IntValue:
@@ -26,7 +26,7 @@ func (self *Sub) Apply(args []value.Value) value.Value {
     case *value.FloatValue:
       val = args[0].(*value.FloatValue).Value
     default:
-      panic(fmt.Sprint("incorrect argument type for '-' : ", args[0]))
+      panic(fmt.Sprint("incorrect argument type for `-' : ", args[0]))
     }
     args = args[1:]
   }
@@ -39,7 +39,7 @@ func (self *Sub) Apply(args []value.Value) value.Value {
       isfloat = true
       val -= arg.(*value.FloatValue).Value
     default:
-      panic(fmt.Sprint("incorrect argument type for '-' : ", arg))
+      panic(fmt.Sprint("incorrect argument type for `-' : ", arg))
     }
 
   }

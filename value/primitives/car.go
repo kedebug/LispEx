@@ -9,7 +9,7 @@ type Car struct {
   value.Primitive
 }
 
-func NewCar() value.Value {
+func NewCar() *Car {
   return &Car{value.Primitive{"car"}}
 }
 

@@ -9,7 +9,7 @@ type Add struct {
   value.Primitive
 }
 
-func NewAdd() value.Value {
+func NewAdd() *Add {
   return &Add{value.Primitive{"+"}}
 }
 
