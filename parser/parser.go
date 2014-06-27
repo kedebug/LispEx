@@ -143,14 +143,20 @@ func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
   // (quasiquote <qq template>)
   // `<qq template>
 
+  // http://docs.racket-lang.org/reference/quasiquote.html
+  // A quasiquote form within the original datum increments
+  // the level of quasiquotation: within the quasiquote form,
+  // each unquote or unquote-splicing is preserved,
+  // but a further nested unquote or unquote-splicing escapes.
+  // Multiple nestings of quasiquote require multiple nestings
+  // of unquote or unquote-splicing to escape.
+
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("quasiquote: wrong number of parts"))
   }
   switch elements[1].(type) {
   case *ast.Tuple:
-    // `(1 ,(+ 1 1) ,@(cdr '(2 3 4)))
-    // `((,(+ 2 3) c) d)
     qqt := elements[1].(*ast.Tuple).Elements
     slice := make([]ast.Node, 0, len(qqt))
     for _, node := range qqt {
@@ -200,8 +206,11 @@ func ParseUnquoteSplicing(tuple *ast.Tuple) *ast.UnquoteSplicing {
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
   }
-  _, istuple := elements[1].(*ast.Tuple)
-  return ast.NewUnquoteSplicing(ParseNode(elements[1]), !istuple)
+  if _, ok := elements[1].(*ast.Tuple); ok {
+    return ast.NewUnquoteSplicing(ParseNode(elements[1]))
+  } else {
+    panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", elements[1]))
+  }
 }
 
 func ParseDefine(tuple *ast.Tuple) *ast.Define {
