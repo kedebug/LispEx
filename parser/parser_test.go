@@ -11,20 +11,32 @@ func test(exprs string) string {
   return block.Eval(scope.NewRootScope()).String()
 }
 
+func testIf() bool {
+  var exprs string = `
+    (if 1 2 invalid)
+    (if #f invalid 'ok)
+    (if #t 1)
+    (if #f 1)
+  `
+  expected := "2\nok\n1"
+  return expected == test(exprs)
+}
+
 func testDefine() bool {
   var exprs string = `
     (define x 3) x (+ x x)
     (define x 1) x (define x (+ x 1)) x
     (define y 2) ((lambda (x) (define y 1) (+ x y)) 3) y
-    (define f (lambda () (+ 1 2)))
-    (f)
+    (define f (lambda () (+ 1 2))) (f)
     (define add3 (lambda (x) (+ x 3))) (add3 3)
     (define first car) (first '(1 2))
     (define (x y . z) (cons y z)) (x 1 2 3)
     (define (f x) (+ x y)) (define y 1) (f 1)
     (define plus (lambda (x) (+ x y))) (define y 1) (plus 3)
+    (define x 0) (define z 1) (define (f x y) (set! z 2) (+ x y)) (f 1 2) x z
+    (define x -2) x (set! x (+ x x)) x
   `
-  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4"
+  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n-4"
   return expected == test(exprs)
 }
 
@@ -82,18 +94,23 @@ func testQuasiquote() bool {
 
 func TestParser(t *testing.T) {
   if testDefine() {
-    fmt.Println("TEST define: PASS")
+    fmt.Println("TEST define:       PASS")
   } else {
-    fmt.Println("TEST define: FAILED")
+    fmt.Println("TEST define:       FAILED")
   }
   if testLambda() {
-    fmt.Println("TEST lambda: PASS")
+    fmt.Println("TEST lambda:       PASS")
   } else {
-    fmt.Println("TEST lambda: FAILED")
+    fmt.Println("TEST lambda:       FAILED")
   }
   if testQuasiquote() {
-    fmt.Println("TEST quasiquote: PASS")
+    fmt.Println("TEST quasiquote:   PASS")
   } else {
-    fmt.Println("TEST quasiquote: FAILED")
+    fmt.Println("TEST quasiquote:   FAILED")
+  }
+  if testIf() {
+    fmt.Println("TEST if:           PASS")
+  } else {
+    fmt.Println("TEST if:           FAILED")
   }
 }

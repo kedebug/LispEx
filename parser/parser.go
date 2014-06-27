@@ -3,6 +3,7 @@ package parser
 import (
   "fmt"
   "github.com/kedebug/LispEx/ast"
+  "github.com/kedebug/LispEx/constants"
   "github.com/kedebug/LispEx/lexer"
 )
 
@@ -81,24 +82,26 @@ func ParseNode(node ast.Node) ast.Node {
   case *ast.Name:
     name := elements[0].(*ast.Name)
     switch name.Identifier {
-    case "seq":
-      return ParseBlock(tuple)
-    case "quote":
+    case constants.QUOTE:
       return ParseQuote(tuple)
-    case "quasiquote":
+    case constants.QUASIQUOTE:
       // parse "unquote" and "unquote-splicing" in "quasiquote"
       // so they never go through ParseNode
       return ParseQuasiquote(tuple)
-    case "unquote":
+    case constants.UNQUOTE:
       return ParseUnquote(tuple)
       //panic(fmt.Sprint("unquote: not in quasiquote"))
-    case "unquote-splicing":
+    case constants.UNQUOTE_SPLICING:
       return ParseUnquoteSplicing(tuple)
       //panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
-    case "define":
+    case constants.DEFINE:
       return ParseDefine(tuple)
-    case "lambda":
+    case constants.LAMBDA:
       return ParseLambda(tuple)
+    case constants.IF:
+      return ParseIf(tuple)
+    case constants.SET:
+      return ParseSet(tuple)
     default:
       return ParseCall(tuple)
     }
@@ -169,12 +172,12 @@ func ParseQuasiquotedNode(node ast.Node) ast.Node {
     return ast.NilPair
   }
   if name, ok := elements[0].(*ast.Name); ok {
-    if name.Identifier == "unquote" {
-      return ParseUnquote(tuple)
-    } else if name.Identifier == "unquote-splicing" {
-      return ParseUnquoteSplicing(tuple)
-    } else if name.Identifier == "quasiquote" {
+    if name.Identifier == constants.QUASIQUOTE {
       return node
+    } else if name.Identifier == constants.UNQUOTE {
+      return ParseUnquote(tuple)
+    } else if name.Identifier == constants.UNQUOTE_SPLICING {
+      return ParseUnquoteSplicing(tuple)
     }
   }
   slice := make([]ast.Node, 0, len(elements))
@@ -292,6 +295,34 @@ func ParseLambda(tuple *ast.Tuple) *ast.Lambda {
   default:
     panic(fmt.Sprint("unsupported parser type ", pattern))
   }
+}
+
+func ParseIf(tuple *ast.Tuple) *ast.If {
+  elements := tuple.Elements
+  length := len(elements)
+  if length != 3 && length != 4 {
+    panic(fmt.Sprintf("incorrect format of if: %s", tuple))
+  }
+  test := ParseNode(elements[1])
+  then := ParseNode(elements[2])
+  if length == 3 {
+    return ast.NewIf(test, then, nil)
+  } else {
+    return ast.NewIf(test, then, ParseNode(elements[3]))
+  }
+}
+
+func ParseSet(tuple *ast.Tuple) *ast.Set {
+  elements := tuple.Elements
+  if len(elements) != 3 {
+    panic(fmt.Sprintf("incorrect format of set!: %s", tuple))
+  }
+  pattern := ParseNode(elements[1])
+  if _, ok := pattern.(*ast.Name); !ok {
+    panic(fmt.Sprintf("set!: not an indentifier in %s", tuple))
+  }
+  value := ParseNode(elements[2])
+  return ast.NewSet(pattern.(*ast.Name), value)
 }
 
 func ParseList(nodes []ast.Node) []ast.Node {
