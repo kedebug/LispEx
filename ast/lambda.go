@@ -16,6 +16,9 @@ type Lambda struct {
 }
 
 func NewLambda(params Node, body Node) *Lambda {
+  if params == nil {
+    params = NilPair
+  }
   return &Lambda{Params: params, Body: body}
 }
 
@@ -24,11 +27,5 @@ func (self *Lambda) Eval(env *scope.Scope) value.Value {
 }
 
 func (self *Lambda) String() string {
-  var s string
-  if self.Params == nil {
-    s = "()"
-  } else {
-    s = fmt.Sprint(self.Params)
-  }
-  return fmt.Sprintf("(lambda %s %s)", s, self.Body)
+  return fmt.Sprintf("(lambda %s %s)", self.Params, self.Body)
 }

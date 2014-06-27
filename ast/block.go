@@ -15,11 +15,20 @@ func NewBlock(exprs []Node) *Block {
 }
 
 func (self *Block) Eval(s *scope.Scope) value.Value {
+  var result string
+  var first bool = true
   env := scope.NewScope(s)
-  for i := 0; i < len(self.Exprs)-1; i++ {
-    self.Exprs[i].Eval(env)
+  for i := 0; i < len(self.Exprs); i++ {
+    if evaluated := self.Exprs[i].Eval(env); evaluated != nil {
+      if first {
+        first = false
+        result += fmt.Sprint(evaluated)
+      } else {
+        result += fmt.Sprintf("\n%s", evaluated)
+      }
+    }
   }
-  return self.Exprs[len(self.Exprs)-1].Eval(env)
+  return value.NewStringValue(result)
 }
 
 func (self *Block) String() string {
@@ -28,7 +37,7 @@ func (self *Block) String() string {
     if i == 0 {
       s += fmt.Sprintf("%s", expr)
     } else {
-      s += fmt.Sprintf("\n%s", expr)
+      s += fmt.Sprintf(" %s", expr)
     }
   }
   return s

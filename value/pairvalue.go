@@ -33,6 +33,17 @@ func (self *PairValue) String() string {
   if self.Second == NilPairValue {
     return fmt.Sprintf("(%s)", self.First)
   }
+  length := len(self.Second.String())
+  switch self.First.String() {
+  case "quote":
+    return fmt.Sprintf("'%s", self.Second.String()[1:length-1])
+  case "unquote":
+    return fmt.Sprintf(",%s", self.Second.String()[1:length-1])
+  case "quasiquote":
+    return fmt.Sprintf("`%s", self.Second.String()[1:length-1])
+  case "unquote-splicing":
+    return fmt.Sprintf(",@%s", self.Second.String()[1:length-1])
+  }
   switch self.Second.(type) {
   case *PairValue:
     return fmt.Sprintf("(%s %s", self.First, self.Second.String()[1:])

@@ -11,9 +11,8 @@ func ParseFromString(name, program string) ast.Node {
 }
 
 func Parse(l *lexer.Lexer) ast.Node {
-  elements := []ast.Node{ast.NewName("seq")}
-  elements = append(elements, parser(l, make([]ast.Node, 0), " ")...)
-  return ParseNode(ast.NewTuple(elements))
+  elements := parser(l, make([]ast.Node, 0), " ")
+  return ParseBlock(ast.NewTuple(elements))
 }
 
 func parser(l *lexer.Lexer, elements []ast.Node, delimiter string) []ast.Node {
@@ -91,9 +90,11 @@ func ParseNode(node ast.Node) ast.Node {
       // so they never go through ParseNode
       return ParseQuasiquote(tuple)
     case "unquote":
-      panic(fmt.Sprint("unquote: not in quasiquote"))
+      return ParseUnquote(tuple)
+      //panic(fmt.Sprint("unquote: not in quasiquote"))
     case "unquote-splicing":
-      panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
+      return ParseUnquoteSplicing(tuple)
+      //panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
     case "define":
       return ParseDefine(tuple)
     case "lambda":
@@ -146,29 +147,41 @@ func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
   switch elements[1].(type) {
   case *ast.Tuple:
     // `(1 ,(+ 1 1) ,@(cdr '(2 3 4)))
+    // `((,(+ 2 3) c) d)
     qqt := elements[1].(*ast.Tuple).Elements
     slice := make([]ast.Node, 0, len(qqt))
     for _, node := range qqt {
-      if tuple, ok := node.(*ast.Tuple); ok {
-        if len(tuple.Elements) == 0 {
-          panic("missing procedure expression, given: ()")
-        }
-        if name, ok := tuple.Elements[0].(*ast.Name); ok {
-          if name.Identifier == "unquote" {
-            // ,(+ 1 1)
-            node = ParseUnquote(tuple)
-          } else if name.Identifier == "unquote-splicing" {
-            // ,@(cdr '(2 3 4))
-            node = ParseUnquoteSplicing(tuple)
-          }
-        }
-      }
-      slice = append(slice, node)
+      slice = append(slice, ParseQuasiquotedNode(node))
     }
     return ast.NewQuasiquote(ExpandList(slice))
   default:
     return ast.NewQuasiquote(elements[1])
   }
+}
+
+func ParseQuasiquotedNode(node ast.Node) ast.Node {
+  if _, ok := node.(*ast.Tuple); !ok {
+    return node
+  }
+  tuple := node.(*ast.Tuple)
+  elements := tuple.Elements
+  if len(elements) == 0 {
+    return ast.NilPair
+  }
+  if name, ok := elements[0].(*ast.Name); ok {
+    if name.Identifier == "unquote" {
+      return ParseUnquote(tuple)
+    } else if name.Identifier == "unquote-splicing" {
+      return ParseUnquoteSplicing(tuple)
+    } else if name.Identifier == "quasiquote" {
+      return node
+    }
+  }
+  slice := make([]ast.Node, 0, len(elements))
+  for _, node := range elements {
+    slice = append(slice, ParseQuasiquotedNode(node))
+  }
+  return ast.NewTuple(slice)
 }
 
 func ParseUnquote(tuple *ast.Tuple) *ast.Unquote {
@@ -270,7 +283,7 @@ func ParseLambda(tuple *ast.Tuple) *ast.Lambda {
   case *ast.Tuple:
     formals := ExpandFormals(pattern.(*ast.Tuple).Elements)
     _, ok := formals.(*ast.Pair)
-    if ok || formals == nil {
+    if ok || formals == ast.NilPair {
       return ast.NewLambda(formals, body)
     } else {
       // (. <variable>) is not allowed

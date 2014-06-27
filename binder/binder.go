@@ -7,11 +7,12 @@ import (
 )
 
 func Define(env *scope.Scope, pattern string, val value.Value) {
-  if v := env.LookupLocal(pattern); v == nil {
-    env.Put(pattern, val)
-  } else {
-    panic(fmt.Sprint("Redefine name: ", pattern))
-  }
+  env.Put(pattern, val)
+  //if v := env.LookupLocal(pattern); v == nil {
+
+  //} else {
+  //  panic(fmt.Sprint("Redefine name: ", pattern))
+  //}
 }
 
 func Assign(s *scope.Scope, pattern string, val value.Value) {

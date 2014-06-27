@@ -19,7 +19,11 @@ func NewQuote(body Node) *Quote {
 }
 
 func (self *Quote) Eval(env *scope.Scope) value.Value {
-  return self.Body.Eval(env)
+  if _, ok := self.Body.(*Name); ok {
+    return self.Body
+  } else {
+    return self.Body.Eval(env)
+  }
 }
 
 func (self *Quote) String() string {

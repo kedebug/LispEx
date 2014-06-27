@@ -19,6 +19,7 @@ func NewCall(callee Node, args []Node) *Call {
 
 func (self *Call) Eval(s *scope.Scope) value.Value {
   callee := self.Callee.Eval(s)
+  // we will handle (+ . (1)) latter
   args := EvalList(self.Args, s)
 
   switch callee.(type) {
