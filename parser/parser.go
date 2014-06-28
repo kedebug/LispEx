@@ -151,16 +151,38 @@ func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
   // Multiple nestings of quasiquote require multiple nestings
   // of unquote or unquote-splicing to escape.
 
+  return ParseQuasiquoteLevel(tuple, 1)
+}
+
+func ParseQuasiquoteLevel(tuple *ast.Tuple, level int) *ast.Quasiquote {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("quasiquote: wrong number of parts"))
   }
   switch elements[1].(type) {
   case *ast.Tuple:
+    // `(()) `((x y)) `((1 2)) are all legal
+    // `(()) will be expanded correctly latter
     qqt := elements[1].(*ast.Tuple).Elements
     slice := make([]ast.Node, 0, len(qqt))
     for _, node := range qqt {
-      slice = append(slice, ParseQuasiquotedNode(node))
+      if tuple1, ok := node.(*ast.Tuple); ok {
+        elements = tuple1.Elements
+        if len(elements) > 0 {
+          // `((x y))
+          if name, ok := elements[1].(*ast.Name); ok {
+            switch name.Identifier {
+            case constants.UNQUOTE:
+              node = ParseUnquote(tuple1, level-1)
+            case constants.UNQUOTE_SPLICING:
+              node = ParseUnquote(tuple1, level-1)
+            case constants.QUASIQUOTE:
+              node = ParseQuasiquoteLevel(tuple1, level+1)
+            }
+          }
+        }
+      }
+      slice = append(slice, node)
     }
     return ast.NewQuasiquote(ExpandList(slice))
   default:
@@ -168,46 +190,34 @@ func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
   }
 }
 
-func ParseQuasiquotedNode(node ast.Node) ast.Node {
-  if _, ok := node.(*ast.Tuple); !ok {
-    return node
-  }
-  tuple := node.(*ast.Tuple)
-  elements := tuple.Elements
-  if len(elements) == 0 {
-    return ast.NilPair
-  }
-  if name, ok := elements[0].(*ast.Name); ok {
-    if name.Identifier == constants.QUASIQUOTE {
-      return node
-    } else if name.Identifier == constants.UNQUOTE {
-      return ParseUnquote(tuple)
-    } else if name.Identifier == constants.UNQUOTE_SPLICING {
-      return ParseUnquoteSplicing(tuple)
-    }
-  }
-  slice := make([]ast.Node, 0, len(elements))
-  for _, node := range elements {
-    slice = append(slice, ParseQuasiquotedNode(node))
-  }
-  return ast.NewTuple(slice)
-}
-
-func ParseUnquote(tuple *ast.Tuple) *ast.Unquote {
+func ParseUnquote(tuple *ast.Tuple, level int) *ast.Unquote {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote: wrong number of parts"))
   }
-  return ast.NewUnquote(ParseNode(elements[1]))
+  if level == 0 {
+    return ast.NewUnquote(ParseNode(elements[1]))
+  } else {
+    if tuple1, ok := elements[1].(*ast.Tuple); ok {
+      // `(`,(+ ,1 2))
+      return ParseQuasiquoteLevel(tuple1, level-1)
+    } else {
+      // `(`,x)
+    }
+  }
 }
 
-func ParseUnquoteSplicing(tuple *ast.Tuple) *ast.UnquoteSplicing {
+func ParseUnquoteSplicing(tuple *ast.Tuple, level int) *ast.UnquoteSplicing {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
   }
   if _, ok := elements[1].(*ast.Tuple); ok {
-    return ast.NewUnquoteSplicing(ParseNode(elements[1]))
+    if level == 0 {
+      return ast.NewUnquoteSplicing(ParseNode(elements[1]))
+    } else {
+      return ast.NewUnquoteSplicing(ParseQuasiquotedNode(elements[1], level-1))
+    }
   } else {
     panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", elements[1]))
   }
