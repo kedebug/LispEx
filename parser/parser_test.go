@@ -34,9 +34,9 @@ func testDefine() bool {
     (define (f x) (+ x y)) (define y 1) (f 1)
     (define plus (lambda (x) (+ x y))) (define y 1) (plus 3)
     (define x 0) (define z 1) (define (f x y) (set! z 2) (+ x y)) (f 1 2) x z
-    (define x -2) x (set! x (+ x x)) x
+    (define x -2) x (set! x (* x x)) x
   `
-  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n-4"
+  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n4"
   return expected == test(exprs)
 }
 
@@ -72,6 +72,8 @@ a
 
 func testQuasiquote() bool {
   var exprs string
+  exprs += "`()"
+  exprs += "`(())"
   exprs += "`(+ 2 3)"
   exprs += "`(+ 2 ,(+ 3 4))"
   exprs += "`(a b (,(+ 2 3) c) d)"
@@ -79,15 +81,27 @@ func testQuasiquote() bool {
   exprs += "`',(cons 'a 'b)"
   exprs += "`(+ ,@(cdr '(* 2 3)))"
   exprs += "`(1 2 `(3 4 ,@(5 6 8 9 10) 11 12) 13 14)"
+  exprs += "``(+ ,,(+ 1 2) 2 3)"
+  exprs += "`(1 2 `(10 ,',(+ 2 3)))"
+  exprs += "`(+ 2 `(10 ,(+ 2 3)))"
+  exprs += "`(1 2 `(10 ,,(+ 2 3)))"
+  exprs += "`(1 `,(+ 1 ,(+ 2 3)) 4)"
 
   var expected string
-  expected += "(+ 2 3)"
+  expected += "()"
+  expected += "\n(())"
+  expected += "\n(+ 2 3)"
   expected += "\n(+ 2 7)"
   expected += "\n(a b (5 c) d)"
   expected += "\n`,(cons 'a 'b)"
   expected += "\n'(a . b)"
   expected += "\n(+ 2 3)"
   expected += "\n(1 2 `(3 4 ,@(5 6 8 9 10) 11 12) 13 14)"
+  expected += "\n`(+ ,3 2 3)"
+  expected += "\n(1 2 `(10 ,'5))"
+  expected += "\n(+ 2 `(10 ,(+ 2 3)))"
+  expected += "\n(1 2 `(10 ,5))"
+  expected += "\n(1 `,(+ 1 5) 4)"
 
   return expected == test(exprs)
 }

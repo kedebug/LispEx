@@ -12,61 +12,8 @@ func ParseFromString(name, program string) ast.Node {
 }
 
 func Parse(l *lexer.Lexer) ast.Node {
-  elements := parser(l, make([]ast.Node, 0), " ")
+  elements := PreParser(l, make([]ast.Node, 0), " ")
   return ParseBlock(ast.NewTuple(elements))
-}
-
-func parser(l *lexer.Lexer, elements []ast.Node, delimiter string) []ast.Node {
-  for token := l.NextToken(); token.Type != lexer.TokenEOF; token = l.NextToken() {
-    switch token.Type {
-    case lexer.TokenIdentifier:
-      elements = append(elements, ast.NewName(token.Value))
-
-    case lexer.TokenIntegerLiteral:
-      elements = append(elements, ast.NewInt(token.Value))
-    case lexer.TokenFloatLiteral:
-      elements = append(elements, ast.NewFloat(token.Value))
-
-    case lexer.TokenOpenParen:
-      tuple := ast.NewTuple(parser(l, make([]ast.Node, 0), "("))
-      elements = append(elements, tuple)
-    case lexer.TokenCloseParen:
-      if delimiter != "(" {
-        panic(fmt.Sprint("read: unexpected `)'"))
-      }
-      return elements
-
-    case lexer.TokenQuote:
-      quote := []ast.Node{ast.NewName("quote")}
-      quote = append(quote, parser(l, make([]ast.Node, 0), "'")...)
-      elements = append(elements, ast.NewTuple(quote))
-    case lexer.TokenQuasiquote:
-      quasiquote := []ast.Node{ast.NewName("quasiquote")}
-      quasiquote = append(quasiquote, parser(l, make([]ast.Node, 0), "`")...)
-      elements = append(elements, ast.NewTuple(quasiquote))
-    case lexer.TokenUnquote:
-      unquote := []ast.Node{ast.NewName("unquote")}
-      unquote = append(unquote, parser(l, make([]ast.Node, 0), ",")...)
-      elements = append(elements, ast.NewTuple(unquote))
-    case lexer.TokenUnquoteSplicing:
-      unquoteSplicing := []ast.Node{ast.NewName("unquote-splicing")}
-      unquoteSplicing = append(unquoteSplicing, parser(l, make([]ast.Node, 0), ",@")...)
-      elements = append(elements, ast.NewTuple(unquoteSplicing))
-
-    case lexer.TokenError:
-      panic(fmt.Errorf("token error: %s", token.Value))
-    default:
-      panic(fmt.Errorf("unexpected token type: %v", token.Type))
-    }
-
-    if delimiter == "'" || delimiter == "`" || delimiter == "," || delimiter == ",@" {
-      return elements
-    }
-  }
-  if delimiter != " " {
-    panic(fmt.Errorf("unclosed delimeter, expected: `%s'", delimiter))
-  }
-  return elements
 }
 
 func ParseNode(node ast.Node) ast.Node {
@@ -87,13 +34,11 @@ func ParseNode(node ast.Node) ast.Node {
     case constants.QUASIQUOTE:
       // parse "unquote" and "unquote-splicing" in "quasiquote"
       // so they never go through ParseNode
-      return ParseQuasiquote(tuple)
+      return ParseQuasiquote(tuple, 1)
     case constants.UNQUOTE:
-      return ParseUnquote(tuple)
-      //panic(fmt.Sprint("unquote: not in quasiquote"))
+      panic(fmt.Sprint("unquote: not in quasiquote"))
     case constants.UNQUOTE_SPLICING:
-      return ParseUnquoteSplicing(tuple)
-      //panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
+      panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
     case constants.DEFINE:
       return ParseDefine(tuple)
     case constants.LAMBDA:
@@ -139,7 +84,7 @@ func ParseQuote(tuple *ast.Tuple) *ast.Quote {
   }
 }
 
-func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
+func ParseQuasiquote(tuple *ast.Tuple, level int) ast.Node {
   // (quasiquote <qq template>)
   // `<qq template>
 
@@ -151,10 +96,6 @@ func ParseQuasiquote(tuple *ast.Tuple) *ast.Quasiquote {
   // Multiple nestings of quasiquote require multiple nestings
   // of unquote or unquote-splicing to escape.
 
-  return ParseQuasiquoteLevel(tuple, 1)
-}
-
-func ParseQuasiquoteLevel(tuple *ast.Tuple, level int) *ast.Quasiquote {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("quasiquote: wrong number of parts"))
@@ -163,34 +104,58 @@ func ParseQuasiquoteLevel(tuple *ast.Tuple, level int) *ast.Quasiquote {
   case *ast.Tuple:
     // `(()) `((x y)) `((1 2)) are all legal
     // `(()) will be expanded correctly latter
-    qqt := elements[1].(*ast.Tuple).Elements
-    slice := make([]ast.Node, 0, len(qqt))
-    for _, node := range qqt {
+    node := ParseNestedQuasiquote(elements[1].(*ast.Tuple), level)
+    if level > 1 {
+      // only level 1 will be parsed as Quasiquote Node
+      // others will be treated as almost constants (tuple)
+      elements[1] = node
+      return tuple
+    } else {
       if tuple1, ok := node.(*ast.Tuple); ok {
-        elements = tuple1.Elements
-        if len(elements) > 0 {
-          // `((x y))
-          if name, ok := elements[1].(*ast.Name); ok {
-            switch name.Identifier {
-            case constants.UNQUOTE:
-              node = ParseUnquote(tuple1, level-1)
-            case constants.UNQUOTE_SPLICING:
-              node = ParseUnquote(tuple1, level-1)
-            case constants.QUASIQUOTE:
-              node = ParseQuasiquoteLevel(tuple1, level+1)
-            }
-          }
-        }
+        return ast.NewQuasiquote(ExpandList(tuple1.Elements))
+      } else {
+        return ast.NewQuasiquote(node)
       }
-      slice = append(slice, node)
     }
-    return ast.NewQuasiquote(ExpandList(slice))
   default:
     return ast.NewQuasiquote(elements[1])
   }
 }
 
-func ParseUnquote(tuple *ast.Tuple, level int) *ast.Unquote {
+func ParseNestedQuasiquote(tuple *ast.Tuple, level int) ast.Node {
+  // tuple can be:
+  //  (unquote <datum>)
+  //  (unquote-splicing <datum>)
+  //  (quasiquote <datum>)
+  // also can be:
+  //  (var1 var2 (unquote <datum>)) etc.
+  // We should handle these scenarios carefully.
+
+  elements := tuple.Elements
+  if len(elements) == 0 {
+    return tuple
+  }
+  if name, ok := elements[0].(*ast.Name); ok {
+    switch name.Identifier {
+    case constants.UNQUOTE:
+      return ParseUnquote(tuple, level-1)
+    case constants.UNQUOTE_SPLICING:
+      return ParseUnquoteSplicing(tuple, level-1)
+    case constants.QUASIQUOTE:
+      return ParseQuasiquote(tuple, level+1)
+    }
+  }
+  slice := make([]ast.Node, 0, len(elements))
+  for _, node := range elements {
+    if _, ok := node.(*ast.Tuple); ok {
+      node = ParseNestedQuasiquote(node.(*ast.Tuple), level)
+    }
+    slice = append(slice, node)
+  }
+  return ast.NewTuple(slice)
+}
+
+func ParseUnquote(tuple *ast.Tuple, level int) ast.Node {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote: wrong number of parts"))
@@ -198,16 +163,14 @@ func ParseUnquote(tuple *ast.Tuple, level int) *ast.Unquote {
   if level == 0 {
     return ast.NewUnquote(ParseNode(elements[1]))
   } else {
-    if tuple1, ok := elements[1].(*ast.Tuple); ok {
-      // `(`,(+ ,1 2))
-      return ParseQuasiquoteLevel(tuple1, level-1)
-    } else {
-      // `(`,x)
+    if _, ok := elements[1].(*ast.Tuple); ok {
+      elements[1] = ParseNestedQuasiquote(elements[1].(*ast.Tuple), level)
     }
+    return tuple
   }
 }
 
-func ParseUnquoteSplicing(tuple *ast.Tuple, level int) *ast.UnquoteSplicing {
+func ParseUnquoteSplicing(tuple *ast.Tuple, level int) ast.Node {
   elements := tuple.Elements
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
@@ -216,7 +179,8 @@ func ParseUnquoteSplicing(tuple *ast.Tuple, level int) *ast.UnquoteSplicing {
     if level == 0 {
       return ast.NewUnquoteSplicing(ParseNode(elements[1]))
     } else {
-      return ast.NewUnquoteSplicing(ParseQuasiquotedNode(elements[1], level-1))
+      elements[1] = ParseNestedQuasiquote(elements[1].(*ast.Tuple), level)
+      return tuple
     }
   } else {
     panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", elements[1]))
