@@ -22,6 +22,47 @@ func testIf() bool {
   return expected == test(exprs)
 }
 
+func testPrimitives() bool {
+  var exprs string = `
+    1
+    (+) (*)
+    (+ 1 1)
+    (+ 1 2 -3)
+    (+ (* 3 4) (- -4 5) (/ 2 -1))
+
+    (= 1 2) (= 1 1)
+    (< 1 2) (< 1 1)
+    (> 1 1) (> 2 1)
+    (>= 1 1) (>= 1 2)
+    (<= 1 1) (<= 2 1)
+
+    'abc
+    (quote abc)
+    '()
+    '(compose f g)
+
+    (car '(a b c))
+    (car '(a))
+    (car '(a b . c))
+    (cdr '(a b c))
+    (cdr '(a b))
+    (cdr '(a))
+    (cdr '(a . b))
+    (cdr '(a b . c))
+    (cons 'a '(b c))
+    (cons 'a '())
+    (cons 'a '(b . c))
+    (cons 'a 'b)
+    (cons '() '())
+  `
+  expected := "1\n0\n1\n2\n0\n1"
+  expected += "\n#f\n#t\n#t\n#f\n#f\n#t\n#t\n#f\n#t\n#f"
+  expected += "\nabc\nabc\n()\n(compose f g)"
+  expected += "\na\na\na\n(b c)\n(b)\n()\nb\n(b . c)\n(a b c)\n(a)\n(a b . c)\n(a . b)\n(())"
+
+  return expected == test(exprs)
+}
+
 func testDefine() bool {
   var exprs string = `
     (define x 3) x (+ x x)
@@ -37,6 +78,7 @@ func testDefine() bool {
     (define x -2) x (set! x (* x x)) x
   `
   expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n4"
+
   return expected == test(exprs)
 }
 
@@ -46,6 +88,7 @@ func testLambda() bool {
     (lambda (x) 1 2 3)
     (lambda (x y) 1 2 3)
     (lambda (x . y) 1 2 3)
+
     ((lambda (x) x) 'a)
     ((lambda x x) 'a)
     ((lambda x x) 'a 'b)
@@ -54,18 +97,11 @@ func testLambda() bool {
     ((lambda (x y . z) (+ x y (car z))) 1 2 5 11)
     (define x 10) ((lambda (x) x) 5) x
   `
-  expected := `(lambda x 1 2 3)
-(lambda (x) 1 2 3)
-(lambda (x y) 1 2 3)
-(lambda (x . y) 1 2 3)
-a
-(a)
-(a b)
-8
-3
-8
-5
-10`
+  expected := "(lambda x 1 2 3)"
+  expected += "\n(lambda (x) 1 2 3)"
+  expected += "\n(lambda (x y) 1 2 3)"
+  expected += "\n(lambda (x . y) 1 2 3)"
+  expected += "\na\n(a)\n(a b)\n8\n3\n8\n5\n10"
 
   return expected == test(exprs)
 }
@@ -109,6 +145,16 @@ func testQuasiquote() bool {
 }
 
 func TestParser(t *testing.T) {
+  if testIf() {
+    fmt.Println("TEST if:           PASS")
+  } else {
+    fmt.Println("TEST if:           FAILED")
+  }
+  if testPrimitives() {
+    fmt.Println("TEST primitives:   PASS")
+  } else {
+    fmt.Println("TEST primitives:   FAILED")
+  }
   if testDefine() {
     fmt.Println("TEST define:       PASS")
   } else {
@@ -123,10 +169,5 @@ func TestParser(t *testing.T) {
     fmt.Println("TEST quasiquote:   PASS")
   } else {
     fmt.Println("TEST quasiquote:   FAILED")
-  }
-  if testIf() {
-    fmt.Println("TEST if:           PASS")
-  } else {
-    fmt.Println("TEST if:           FAILED")
   }
 }
