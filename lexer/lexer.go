@@ -135,6 +135,8 @@ func lexWhiteSpace(l *Lexer) stateFn {
     return lexOpenParen
   case r == ')':
     return lexCloseParen
+  case r == '"':
+    return lexString
   case r == '\'':
     return lexQuote
   case r == '`':
@@ -179,6 +181,19 @@ func lexUnquote(l *Lexer) stateFn {
 
 func lexUnquoteSplicing(l *Lexer) stateFn {
   l.emit(TokenUnquoteSplicing)
+  return lexWhiteSpace
+}
+
+func lexString(l *Lexer) stateFn {
+  for r := l.next(); r != '"'; r = l.next() {
+    if r == '\\' {
+      r = l.next()
+    }
+    if r == EOF {
+      return l.errorf("read: expected a closing `\"'")
+    }
+  }
+  l.emit(TokenStringLiteral)
   return lexWhiteSpace
 }
 

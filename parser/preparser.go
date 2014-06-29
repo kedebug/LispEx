@@ -18,6 +18,8 @@ func PreParser(l *lexer.Lexer, elements []ast.Node, delimiter string) []ast.Node
       elements = append(elements, ast.NewInt(token.Value))
     case lexer.TokenFloatLiteral:
       elements = append(elements, ast.NewFloat(token.Value))
+    case lexer.TokenStringLiteral:
+      elements = append(elements, ast.NewString(token.Value))
 
     case lexer.TokenOpenParen:
       tuple := ast.NewTuple(PreParser(l, make([]ast.Node, 0), "("))

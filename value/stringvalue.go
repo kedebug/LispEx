@@ -1,5 +1,7 @@
 package value
 
+import "fmt"
+
 type StringValue struct {
   Value string
 }
@@ -9,5 +11,5 @@ func NewStringValue(val string) *StringValue {
 }
 
 func (self *StringValue) String() string {
-  return self.Value
+  return fmt.Sprintf("\"%s\"", self.Value)
 }
