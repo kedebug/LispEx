@@ -29,6 +29,18 @@ func ParseNode(node ast.Node) ast.Node {
   case *ast.Name:
     name := elements[0].(*ast.Name)
     switch name.Identifier {
+    case constants.DEFINE:
+      return ParseDefine(tuple)
+    case constants.BEGIN:
+      return ParseBegin(tuple)
+    case constants.LAMBDA:
+      return ParseLambda(tuple)
+    case constants.GO:
+      return ParseGo(tuple)
+    case constants.IF:
+      return ParseIf(tuple)
+    case constants.SET:
+      return ParseSet(tuple)
     case constants.QUOTE:
       return ParseQuote(tuple)
     case constants.QUASIQUOTE:
@@ -39,14 +51,6 @@ func ParseNode(node ast.Node) ast.Node {
       panic(fmt.Sprint("unquote: not in quasiquote"))
     case constants.UNQUOTE_SPLICING:
       panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
-    case constants.DEFINE:
-      return ParseDefine(tuple)
-    case constants.LAMBDA:
-      return ParseLambda(tuple)
-    case constants.IF:
-      return ParseIf(tuple)
-    case constants.SET:
-      return ParseSet(tuple)
     default:
       return ParseCall(tuple)
     }
@@ -65,6 +69,21 @@ func ParseBlock(tuple *ast.Tuple) *ast.Block {
   elements := tuple.Elements
   exprs := ParseList(elements)
   return ast.NewBlock(exprs)
+}
+
+func ParseBegin(tuple *ast.Tuple) *ast.Begin {
+  elements := tuple.Elements
+  exprs := ParseList(elements[1:])
+  return ast.NewBegin(exprs)
+}
+
+func ParseGo(tuple *ast.Tuple) *ast.Go {
+  elements := tuple.Elements
+  if len(elements) < 2 {
+    panic(fmt.Sprint("go: bad syntax (missing expressings), expected at least 1"))
+  }
+  exprs := ParseList(elements[1:])
+  return ast.NewGo(exprs)
 }
 
 func ParseQuote(tuple *ast.Tuple) *ast.Quote {
