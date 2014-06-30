@@ -112,12 +112,12 @@ func ParseSelect(tuple *ast.Tuple) *ast.Select {
         if name, ok := call.Callee.(*ast.Name); ok {
           if name.Identifier == constants.CHAN_SEND {
             if len(call.Args) != 2 {
-              panic(fmt.Sprint("chan<-: arguments mismatch, expected 2"))
+              panic(fmt.Sprintf("%s: arguments mismatch, expected 2", constants.CHAN_SEND))
             }
             continue
           } else if name.Identifier == constants.CHAN_RECV {
             if len(call.Args) != 1 {
-              panic(fmt.Sprint("chan->: arguments mismatch, expected 1"))
+              panic(fmt.Sprintf("%s: arguments mismatch, expected 1", constants.CHAN_SEND))
             }
             continue
           }

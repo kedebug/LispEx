@@ -21,6 +21,6 @@ const (
   COND             = "cond"
   GO               = "go"
   CHAN_SEND        = "chan<-"
-  CHAN_RECV        = "chan->"
+  CHAN_RECV        = "<-chan"
   SELECT           = "select"
 )

@@ -171,7 +171,7 @@ func runTests() {
     fmt.Println("TEST quasiquote:   FAILED")
   }
 
-  fmt.Println(test("(select ((chan-> ch)))"))
+  fmt.Println(test("(define ch (make-chan 1)) (chan<- ch 1) (select ((<-chan ch) 2))"))
 }
 
 func try(body func(), handler func(interface{})) {
