@@ -37,6 +37,8 @@ func ParseNode(node ast.Node) ast.Node {
       return ParseLambda(tuple)
     case constants.GO:
       return ParseGo(tuple)
+    case constants.SELECT:
+      return ParseSelect(tuple)
     case constants.IF:
       return ParseIf(tuple)
     case constants.SET:
@@ -78,12 +80,53 @@ func ParseBegin(tuple *ast.Tuple) *ast.Begin {
 }
 
 func ParseGo(tuple *ast.Tuple) *ast.Go {
+  // (go <expression1> <expression2> ...)
+
   elements := tuple.Elements
   if len(elements) < 2 {
     panic(fmt.Sprint("go: bad syntax (missing expressings), expected at least 1"))
   }
   exprs := ParseList(elements[1:])
   return ast.NewGo(exprs)
+}
+
+func ParseSelect(tuple *ast.Tuple) *ast.Select {
+  // (select <clause1> <clause2> ...)
+  //  <clause> = (<case> <expression1> <expression2>)
+  //    <case> = (<chan-send> | <chan-recv>)
+
+  elements := tuple.Elements
+  if len(elements) < 2 {
+    panic(fmt.Sprint("select: bad syntax (missing clauses), expected at least 1"))
+  }
+  elements = elements[1:]
+  clauses := make([][]ast.Node, len(elements))
+  for i, clause := range elements {
+    if _, ok := clause.(*ast.Tuple); ok {
+      exprs := clause.(*ast.Tuple).Elements
+      if len(exprs) == 0 {
+        panic(fmt.Sprint("select: bad syntax (missing select cases), given: ()"))
+      }
+      clauses[i] = ParseList(exprs)
+      if call, ok := clauses[i][0].(*ast.Call); ok {
+        if name, ok := call.Callee.(*ast.Name); ok {
+          if name.Identifier == constants.CHAN_SEND {
+            if len(call.Args) != 2 {
+              panic(fmt.Sprint("chan<-: arguments mismatch, expected 2"))
+            }
+            continue
+          } else if name.Identifier == constants.CHAN_RECV {
+            if len(call.Args) != 1 {
+              panic(fmt.Sprint("chan->: arguments mismatch, expected 1"))
+            }
+            continue
+          }
+        }
+      }
+    }
+    panic(fmt.Sprint("select: bad syntax, given: ", clause))
+  }
+  return ast.NewSelect(clauses)
 }
 
 func ParseQuote(tuple *ast.Tuple) *ast.Quote {

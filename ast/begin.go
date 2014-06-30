@@ -16,6 +16,9 @@ func NewBegin(exprs []Node) *Begin {
 
 func (self *Begin) Eval(env *scope.Scope) value.Value {
   length := len(self.Exprs)
+  if length == 0 {
+    return nil
+  }
   for i := 0; i < length-1; i++ {
     self.Exprs[i].Eval(env)
   }

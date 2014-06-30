@@ -144,7 +144,7 @@ func testQuasiquote() bool {
   return expected == test(exprs)
 }
 
-func TestParser(t *testing.T) {
+func runTests() {
   if testIf() {
     fmt.Println("TEST if:           PASS")
   } else {
@@ -170,4 +170,21 @@ func TestParser(t *testing.T) {
   } else {
     fmt.Println("TEST quasiquote:   FAILED")
   }
+
+  fmt.Println(test("(select ((chan-> ch)))"))
+}
+
+func try(body func(), handler func(interface{})) {
+  defer func() {
+    if err := recover(); err != nil {
+      handler(err)
+    }
+  }()
+  body()
+}
+
+func TestParser(t *testing.T) {
+  try(runTests, func(e interface{}) {
+    fmt.Println(e)
+  })
 }
