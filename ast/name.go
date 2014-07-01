@@ -16,7 +16,7 @@ func NewName(identifier string) *Name {
 
 func (self *Name) Eval(env *scope.Scope) value.Value {
   if val := env.Lookup(self.Identifier); val != nil {
-    return val
+    return val.(value.Value)
   } else {
     panic(fmt.Sprintf("%s: undefined identifier", self.Identifier))
   }

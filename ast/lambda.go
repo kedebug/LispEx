@@ -4,7 +4,6 @@ import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
   "github.com/kedebug/LispEx/value"
-  "github.com/kedebug/LispEx/value/closure"
 )
 
 // http://docs.racket-lang.org/guide/lambda.html
@@ -23,7 +22,7 @@ func NewLambda(params Node, body Node) *Lambda {
 }
 
 func (self *Lambda) Eval(env *scope.Scope) value.Value {
-  return closure.NewClosure(env, self)
+  return value.NewClosure(env, self)
 }
 
 func (self *Lambda) String() string {

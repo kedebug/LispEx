@@ -15,8 +15,8 @@ func NewQuasiquote(body Node) *Quasiquote {
 }
 
 func (self *Quasiquote) Eval(env *scope.Scope) value.Value {
-  if _, ok := self.Body.(*Name); ok {
-    return self.Body
+  if name, ok := self.Body.(*Name); ok {
+    return value.NewSymbol(name.Identifier)
   } else {
     return self.Body.Eval(env)
   }

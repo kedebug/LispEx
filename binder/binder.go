@@ -3,21 +3,15 @@ package binder
 import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
-  "github.com/kedebug/LispEx/value"
 )
 
-func Define(env *scope.Scope, pattern string, val value.Value) {
-  env.Put(pattern, val)
-  //if v := env.LookupLocal(pattern); v == nil {
-
-  //} else {
-  //  panic(fmt.Sprint("Redefine name: ", pattern))
-  //}
+func Define(env *scope.Scope, pattern string, value interface{}) {
+  env.Put(pattern, value)
 }
 
-func Assign(s *scope.Scope, pattern string, val value.Value) {
+func Assign(s *scope.Scope, pattern string, value interface{}) {
   if env := s.FindScope(pattern); env != nil {
-    env.Put(pattern, val)
+    env.Put(pattern, value)
   } else {
     panic(fmt.Sprintf("%s was not defined", pattern))
   }

@@ -9,7 +9,7 @@ import (
 // Literal expressions
 //  Body is represented as Pairs (list)
 //  the list only contains Pair, Name or literal nodes
-//  the Name would be treated as Value (see Pair.Eval)
+//  the Name would be treated as Symbol (see Pair.Eval)
 type Quote struct {
   Body Node
 }
@@ -19,8 +19,8 @@ func NewQuote(body Node) *Quote {
 }
 
 func (self *Quote) Eval(env *scope.Scope) value.Value {
-  if _, ok := self.Body.(*Name); ok {
-    return self.Body
+  if name, ok := self.Body.(*Name); ok {
+    return value.NewSymbol(name.Identifier)
   } else {
     return self.Body.Eval(env)
   }

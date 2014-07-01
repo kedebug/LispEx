@@ -7,13 +7,13 @@ import (
 
 type Scope struct {
   parent *Scope
-  env    map[string]value.Value
+  env    map[string]interface{}
 }
 
 func NewScope(parent *Scope) *Scope {
   return &Scope{
     parent: parent,
-    env:    make(map[string]value.Value),
+    env:    make(map[string]interface{}),
   }
 }
 
@@ -28,6 +28,8 @@ func NewRootScope() *Scope {
   root.Put(">=", primitives.NewGtE())
   root.Put("<", primitives.NewLt())
   root.Put("<=", primitives.NewLtE())
+  root.Put("eqv?", primitives.NewIsEqv())
+  root.Put("type-of", primitives.NewTypeOf())
   root.Put("print", primitives.NewPrint())
   root.Put("car", primitives.NewCar())
   root.Put("cdr", primitives.NewCdr())
@@ -40,20 +42,20 @@ func NewRootScope() *Scope {
   return root
 }
 
-func (self *Scope) Put(name string, val value.Value) {
-  self.env[name] = val
+func (self *Scope) Put(name string, value interface{}) {
+  self.env[name] = value
 }
 
 func (self *Scope) PutAll(other *Scope) {
-  for name, val := range other.env {
-    self.env[name] = val
+  for name, value := range other.env {
+    self.env[name] = value
   }
 }
 
-func (self *Scope) Lookup(name string) value.Value {
-  val := self.LookupLocal(name)
-  if val != nil {
-    return val
+func (self *Scope) Lookup(name string) interface{} {
+  value := self.LookupLocal(name)
+  if value != nil {
+    return value
   } else if self.parent != nil {
     return self.parent.Lookup(name)
   } else {
@@ -61,7 +63,7 @@ func (self *Scope) Lookup(name string) value.Value {
   }
 }
 
-func (self *Scope) LookupLocal(name string) value.Value {
+func (self *Scope) LookupLocal(name string) interface{} {
   if v, ok := self.env[name]; ok {
     return v
   }

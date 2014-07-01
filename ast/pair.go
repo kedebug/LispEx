@@ -39,20 +39,21 @@ func (self *Pair) Eval(env *scope.Scope) value.Value {
   var first value.Value
   var second value.Value
 
+  fmt.Println("pair eval:", self.First, self.Second)
   if self.Second == NilPair {
     second = value.NilPairValue
   } else {
     switch self.Second.(type) {
-    case *Pair:
-      second = self.Second.Eval(env)
+    case *Name:
+      second = value.NewSymbol(self.Second.(*Name).Identifier)
     default:
-      second = self.Second
+      second = self.Second.Eval(env)
     }
   }
 
-  if _, ok := self.First.(*Name); ok {
-    // treat Name as Value
-    first = self.First
+  if name, ok := self.First.(*Name); ok {
+    // treat Name as Symbol
+    first = value.NewSymbol(name.Identifier)
   } else if _, ok := self.First.(*UnquoteSplicing); ok {
     // our parser garantees unquote-splicing only appears in quasiquote
     // and unquote-splicing will be evaluated to a list
@@ -83,6 +84,10 @@ func (self *Pair) Eval(env *scope.Scope) value.Value {
     }
   } else {
     first = self.First.Eval(env)
+  }
+  fmt.Println("evaled:", first, second)
+  if _, ok := first.(*value.PairValue); ok {
+    fmt.Println("first pair value:", first)
   }
   return value.NewPairValue(first, second)
 }

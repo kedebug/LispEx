@@ -74,6 +74,8 @@ func ParseBlock(tuple *ast.Tuple) *ast.Block {
 }
 
 func ParseBegin(tuple *ast.Tuple) *ast.Begin {
+  // (begin <expression1> <expression2> ...)
+
   elements := tuple.Elements
   exprs := ParseList(elements[1:])
   return ast.NewBegin(exprs)

@@ -3,11 +3,17 @@ package parser
 import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
+  "io/ioutil"
   "testing"
 )
 
 func test(exprs string) string {
-  block := ParseFromString("Parser", exprs)
+  lib, err := ioutil.ReadFile("../stdlib.ss")
+  if err != nil {
+    panic(err)
+  }
+  block := ParseFromString("Parser", string(lib)+exprs)
+  fmt.Println(block)
   return block.Eval(scope.NewRootScope()).String()
 }
 
@@ -144,21 +150,50 @@ func testQuasiquote() bool {
   return expected == test(exprs)
 }
 
+func testStdlib() bool {
+  exprs := `
+    (bool? #t) (bool? #f) (bool? 12)
+    (integer? 1) (integer? 2.0)
+    (float? 1) (float? 2.0)
+    (string? 1) (string? "abc")
+    (number? 1) (number? 2.0)
+    (null? '()) (null? '(1 2 3))
+    (caar '((1 2) 3 4)) (cadr '((1 2) 3 4))
+    (cdar '((1 2) 3 4)) (cddr '((1 2) 3 4))
+    (caaar '(((1 2) 3) 5 6))
+  `
+
+  expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#t"
+  expected += "\n1\n3\n(2)\n(4)\n1"
+
+  return expected == test(exprs)
+}
+
+func testSelect() bool {
+  exprs := `
+    (define ch (make-chan 1)) 
+    (chan<- ch 1) 
+    (select ((<-chan ch) 2))
+  `
+  expected := "2"
+  return expected == test(exprs)
+}
+
 func runTests() {
   if testIf() {
     fmt.Println("TEST if:           PASS")
   } else {
-    fmt.Println("TEST if:           FAILED")
+    fmt.Println("TEST if:           FAIL")
   }
   if testPrimitives() {
     fmt.Println("TEST primitives:   PASS")
   } else {
-    fmt.Println("TEST primitives:   FAILED")
+    fmt.Println("TEST primitives:   FAIL")
   }
   if testDefine() {
     fmt.Println("TEST define:       PASS")
   } else {
-    fmt.Println("TEST define:       FAILED")
+    fmt.Println("TEST define:       FAIL")
   }
   if testLambda() {
     fmt.Println("TEST lambda:       PASS")
@@ -170,8 +205,16 @@ func runTests() {
   } else {
     fmt.Println("TEST quasiquote:   FAILED")
   }
-
-  fmt.Println(test("(define ch (make-chan 1)) (chan<- ch 1) (select ((<-chan ch) 2))"))
+  if testSelect() {
+    fmt.Println("TEST select:       PASS")
+  } else {
+    fmt.Println("TEST select:       FAILED")
+  }
+  if testStdlib() {
+    fmt.Println("TEST stdlib:       PASS")
+  } else {
+    fmt.Println("TEST stdlib:       FAILED")
+  }
 }
 
 func try(body func(), handler func(interface{})) {
@@ -184,7 +227,6 @@ func try(body func(), handler func(interface{})) {
 }
 
 func TestParser(t *testing.T) {
-  try(runTests, func(e interface{}) {
-    fmt.Println(e)
-  })
+  runTests()
+  // try(runTests, func(e interface{}) { fmt.Println(e) })
 }

@@ -15,6 +15,9 @@ func NewBegin(exprs []Node) *Begin {
 }
 
 func (self *Begin) Eval(env *scope.Scope) value.Value {
+  // The <expression>s are evaluated sequentially from left to right,
+  // and the value(s) of the last <expression> is(are) returned.
+
   length := len(self.Exprs)
   if length == 0 {
     return nil
