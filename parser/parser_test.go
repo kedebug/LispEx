@@ -2,6 +2,7 @@ package parser
 
 import (
   "fmt"
+  "github.com/kedebug/LispEx/ast"
   "github.com/kedebug/LispEx/scope"
   "io/ioutil"
   "testing"
@@ -12,9 +13,22 @@ func test(exprs string) string {
   if err != nil {
     panic(err)
   }
-  block := ParseFromString("Parser", string(lib)+exprs)
-  fmt.Println(block)
-  return block.Eval(scope.NewRootScope()).String()
+  sexprs := ParseFromString("Parser", string(lib)+exprs)
+  values := ast.EvalList(sexprs, scope.NewRootScope())
+  var result string
+  var first bool = true
+
+  for _, val := range values {
+    if val != nil {
+      if first {
+        first = false
+        result += fmt.Sprint(val)
+      } else {
+        result += fmt.Sprintf("\n%s", val)
+      }
+    }
+  }
+  return result
 }
 
 func testIf() bool {
@@ -163,7 +177,7 @@ func testStdlib() bool {
     (caaar '(((1 2) 3) 5 6))
   `
 
-  expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#t"
+  expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f"
   expected += "\n1\n3\n(2)\n(4)\n1"
 
   return expected == test(exprs)

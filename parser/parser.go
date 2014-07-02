@@ -7,13 +7,13 @@ import (
   "github.com/kedebug/LispEx/lexer"
 )
 
-func ParseFromString(name, program string) ast.Node {
+func ParseFromString(name, program string) []ast.Node {
   return Parse(lexer.NewLexer(name, program))
 }
 
-func Parse(l *lexer.Lexer) ast.Node {
+func Parse(l *lexer.Lexer) []ast.Node {
   elements := PreParser(l, make([]ast.Node, 0), " ")
-  return ParseBlock(ast.NewTuple(elements))
+  return ParseList(elements)
 }
 
 func ParseNode(node ast.Node) ast.Node {

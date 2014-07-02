@@ -5,7 +5,6 @@ import (
   "github.com/kedebug/LispEx/converter"
   "github.com/kedebug/LispEx/scope"
   "github.com/kedebug/LispEx/value"
-  "github.com/kedebug/LispEx/value/primitives"
 )
 
 type Call struct {
@@ -35,17 +34,8 @@ func (self *Call) Eval(s *scope.Scope) value.Value {
     BindArguments(env, lambda.Params, converter.SliceToPairValues(args))
     return lambda.Body.Eval(env)
   case value.PrimFunc:
-    if len(args) > 0 {
-      if _, ok := args[0].(*value.PairValue); ok {
-        fmt.Println("call arg pair value:", args[0])
-      }
-    }
     return callee.(value.PrimFunc).Apply(args)
   default:
-    typeof := primitives.NewTypeOf()
-    var v []value.Value
-    v = append(v, callee)
-    fmt.Println(typeof.Apply(v))
     panic(fmt.Sprintf("%s: not allowed in a call context, args: %s", callee, self.Args[0]))
   }
 }

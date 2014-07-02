@@ -8,7 +8,7 @@
 
 (define (null? obj)     (if (eqv? obj '()) #t #f))
 
-(define compose (lambda (f g) (lambda (x) (f (g x)))))
+(define ((compose f g) x)     (f (g x)))
 
 (define   caar (compose car car))
 (define   cadr (compose car cdr))

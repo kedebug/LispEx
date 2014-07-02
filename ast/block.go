@@ -15,13 +15,16 @@ func NewBlock(exprs []Node) *Block {
 }
 
 func (self *Block) Eval(s *scope.Scope) value.Value {
-  var evaluated []value.Value
   env := scope.NewScope(s)
+  length := len(self.Exprs)
 
-  for i := 0; i < len(self.Exprs); i++ {
-    evaluated = append(evaluated, self.Exprs[i].Eval(env))
+  if length == 0 {
+    return nil
   }
-  return value.NewBlockValue(evaluated)
+  for i := 0; i < length-1; i++ {
+    self.Exprs[i].Eval(env)
+  }
+  return self.Exprs[length-1].Eval(env)
 }
 
 func (self *Block) String() string {
