@@ -35,6 +35,12 @@ func ParseNode(node ast.Node) ast.Node {
       return ParseBegin(tuple)
     case constants.LAMBDA:
       return ParseLambda(tuple)
+    case constants.LET:
+      fallthrough
+    case constants.LET_STAR:
+      fallthrough
+    case constants.LET_REC:
+      return ParseLetFamily(tuple)
     case constants.GO:
       return ParseGo(tuple)
     case constants.SELECT:
@@ -129,6 +135,30 @@ func ParseSelect(tuple *ast.Tuple) *ast.Select {
     panic(fmt.Sprint("select: bad syntax, given: ", clause))
   }
   return ast.NewSelect(clauses)
+}
+
+func ParseLetFamily(tuple *ast.Tuple) ast.Node {
+  // (let_ <bindings> <body>)
+  //  <bindings> should have the form ->
+  //    ((<variable1> <init1>) ...)
+  //  where each <init> is an expression
+
+  elements := tuple.Elements
+  if len(elements) != 3 {
+    panic(fmt.Sprintf("%s: no expression in body", elements[0]))
+  }
+
+  name, _ := elements[0].(*ast.Name)
+  switch name.Identifier {
+  case constants.LET:
+    return ast.NewLet(patterns, exprs, body)
+  case constants.LET_STAR:
+    return ast.NewLetStar(patterns, exprs, body)
+  case constants.LET_REC:
+    return ast.NewLetRec(patterns, exprs, body)
+  default:
+    panic(fmt.Sprintf("%s: should not be here", elements[0]))
+  }
 }
 
 func ParseQuote(tuple *ast.Tuple) *ast.Quote {

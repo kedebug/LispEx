@@ -3,9 +3,11 @@ package constants
 const (
   DEFINE           = "define"
   BEGIN            = "begin"
-  LET              = "let"
   SET              = "set!"
   LAMBDA           = "lambda"
+  LET              = "let"
+  LET_STAR         = "let*"
+  LET_REC          = "letrec"
   OPEN_PARANT      = "("
   CLOSE_PARANT     = ")"
   ADD              = "+"
