@@ -131,6 +131,8 @@ func lexWhiteSpace(l *Lexer) stateFn {
   switch r := l.next(); {
   case r == EOF:
     return lexEOF
+  case r == ';':
+    return lexComment
   case r == '(':
     return lexOpenParen
   case r == ')':
@@ -213,6 +215,12 @@ func lexIdentifier(l *Lexer) stateFn {
   l.backup()
 
   l.emit(TokenIdentifier)
+  return lexWhiteSpace
+}
+
+func lexComment(l *Lexer) stateFn {
+  for r := l.next(); r != '\n'; r = l.next() {
+  }
   return lexWhiteSpace
 }
 

@@ -1,3 +1,4 @@
+;; primitive type predicates
 (define (is? x t)       (eqv? (type-of x) t))
 (define (bool? x)       (is? x 'bool))
 (define (integer? x)    (is? x 'integer))
@@ -5,11 +6,13 @@
 (define (number? x)     (if (integer? x) #t (if (float? x) #t #f)))
 (define (string? x)     (is? x 'string))
 (define (pair? x)       (is? x 'pair))
+(define (procedure? x)  (is? x 'procedure))
 
 (define (null? obj)     (if (eqv? obj '()) #t #f))
 
 (define ((compose f g) x)     (f (g x)))
 
+;; list accessors
 (define   caar (compose car car))
 (define   cadr (compose car cdr))
 (define   cdar (compose cdr car))
@@ -40,5 +43,6 @@
 (define cddddr (compose cdr cdddr))
 
 (define (not x) (if x #f #t))
+(define (display x) (print x))
 
 (define (list . objs) objs)

@@ -172,12 +172,15 @@ func testStdlib() bool {
     (string? 1) (string? "abc")
     (number? 1) (number? 2.0)
     (null? '()) (null? '(1 2 3))
+    (define f (lambda () (+ 1 2))) (procedure? f)
+    (define (f x) (+ x)) (procedure? f)
     (caar '((1 2) 3 4)) (cadr '((1 2) 3 4))
     (cdar '((1 2) 3 4)) (cddr '((1 2) 3 4))
     (caaar '(((1 2) 3) 5 6))
+
   `
 
-  expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f"
+  expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f\n#t\n#t"
   expected += "\n1\n3\n(2)\n(4)\n1"
 
   return expected == test(exprs)
@@ -185,11 +188,30 @@ func testStdlib() bool {
 
 func testSelect() bool {
   exprs := `
-    (define ch (make-chan 1)) 
-    (chan<- ch 1) 
-    (select ((<-chan ch) 2))
+    (define ch (make-chan)) 
+    (go (chan<- ch "hello world"))
+    (select ((<-chan ch)))
+
+    (define ping-chan (make-chan))
+    (define pong-chan (make-chan))
+
+    (define (ping n)
+      (if (> n 0)
+        (begin
+          (display (<-chan ping-chan))
+          (chan<- pong-chan 'pong)
+          (ping (- n 1)))))
+
+    (define (pong n)
+      (if (> n 0)
+        (begin
+          (chan<- ping-chan 'ping)
+          (display (<-chan pong-chan))
+          (pong (- n 1)))))
+
+    (go (ping 6) (pong 6))
   `
-  expected := "2"
+  expected := "\"hello world\""
   return expected == test(exprs)
 }
 
