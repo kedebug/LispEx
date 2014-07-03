@@ -15,7 +15,7 @@ func NewLetRec(patterns []*Name, exprs []Node, body Node) *LetRec {
   return &LetRec{Patterns: patterns, Exprs: exprs, Body: body}
 }
 
-func (self *LetRec) Apply(env *scope.Scope) value.Value {
+func (self *LetRec) Eval(env *scope.Scope) value.Value {
   return nil
 }
 

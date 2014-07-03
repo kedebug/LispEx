@@ -144,10 +144,31 @@ func ParseLetFamily(tuple *ast.Tuple) ast.Node {
   //  where each <init> is an expression
 
   elements := tuple.Elements
-  if len(elements) != 3 {
-    panic(fmt.Sprintf("%s: no expression in body", elements[0]))
+  if len(elements) < 3 {
+    panic(fmt.Sprintf("%s: bad syntax, no expression in body", elements[0]))
   }
 
+  if _, ok := elements[1].(*ast.Tuple); !ok {
+    panic(fmt.Sprintf("%s: bad syntax, expected bindings, given: %s", elements[0], elements[1]))
+  }
+
+  bindings := elements[1].(*ast.Tuple).Elements
+  patterns := make([]*ast.Name, len(bindings))
+  exprs := make([]ast.Node, len(bindings))
+  for i, binding := range bindings {
+    if tuple, ok := binding.(*ast.Tuple); ok {
+      if len(tuple.Elements) == 2 {
+        if name, ok := tuple.Elements[0].(*ast.Name); ok {
+          patterns[i] = name
+          exprs[i] = ParseNode(tuple.Elements[1])
+          continue
+        }
+      }
+    }
+    panic(fmt.Sprintf("%s: bad syntax, not an identifer and expression for a binding %s", elements[0], binding))
+  }
+
+  body := ast.NewBlock(ParseList(elements[2:]))
   name, _ := elements[0].(*ast.Name)
   switch name.Identifier {
   case constants.LET:
