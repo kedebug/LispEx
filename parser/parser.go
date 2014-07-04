@@ -84,7 +84,7 @@ func ParseBegin(tuple *ast.Tuple) *ast.Begin {
 
   elements := tuple.Elements
   exprs := ParseList(elements[1:])
-  return ast.NewBegin(exprs)
+  return ast.NewBegin(ast.NewBlock(exprs))
 }
 
 func ParseGo(tuple *ast.Tuple) *ast.Go {
@@ -290,15 +290,13 @@ func ParseUnquoteSplicing(tuple *ast.Tuple, level int) ast.Node {
   if len(elements) != 2 {
     panic(fmt.Sprint("unquote-splicing: wrong number of parts"))
   }
-  if _, ok := elements[1].(*ast.Tuple); ok {
-    if level == 0 {
-      return ast.NewUnquoteSplicing(ParseNode(elements[1]))
-    } else {
-      elements[1] = ParseNestedQuasiquote(elements[1].(*ast.Tuple), level)
-      return tuple
-    }
+  if level == 0 {
+    return ast.NewUnquoteSplicing(ParseNode(elements[1]))
   } else {
-    panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", elements[1]))
+    if _, ok := elements[1].(*ast.Tuple); ok {
+      elements[1] = ParseNestedQuasiquote(elements[1].(*ast.Tuple), level)
+    }
+    return tuple
   }
 }
 

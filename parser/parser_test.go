@@ -144,6 +144,10 @@ func testQuasiquote() bool {
   exprs += "`(1 2 `(10 ,,(+ 2 3)))"
   exprs += "`(1 `,(+ 1 ,(+ 2 3)) 4)"
 
+  exprs += "(let ((a 1) (b 2)) `(,a . ,b))"
+  exprs += "`,(let () (define x 1) x)"
+  exprs += "(let ((a 1) (b 2)) `(,a ,@b))"
+
   var expected string
   expected += "()"
   expected += "\n(())"
@@ -160,6 +164,7 @@ func testQuasiquote() bool {
   expected += "\n(+ 2 `(10 ,(+ 2 3)))"
   expected += "\n(1 2 `(10 ,5))"
   expected += "\n(1 `,(+ 1 5) 4)"
+  expected += "\n(1 . 2)\n1\n(1 . 2)"
 
   return expected == test(exprs)
 }
@@ -177,7 +182,6 @@ func testStdlib() bool {
     (caar '((1 2) 3 4)) (cadr '((1 2) 3 4))
     (cdar '((1 2) 3 4)) (cddr '((1 2) 3 4))
     (caaar '(((1 2) 3) 5 6))
-
   `
 
   expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f\n#t\n#t"
@@ -191,27 +195,43 @@ func testSelect() bool {
     (define ch (make-chan)) 
     (go (chan<- ch "hello world"))
     (select ((<-chan ch)))
-
-    (define ping-chan (make-chan))
-    (define pong-chan (make-chan))
-
-    (define (ping n)
-      (if (> n 0)
-        (begin
-          (display (<-chan ping-chan))
-          (chan<- pong-chan 'pong)
-          (ping (- n 1)))))
-
-    (define (pong n)
-      (if (> n 0)
-        (begin
-          (chan<- ping-chan 'ping)
-          (display (<-chan pong-chan))
-          (pong (- n 1)))))
-
-    (go (ping 6) (pong 6))
   `
   expected := "\"hello world\""
+  return expected == test(exprs)
+}
+
+func testBindings() bool {
+  exprs := `
+    (let ((x 2) (y 3)) (* x y))
+    (let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x)))
+    (begin (define a 5) (let ((a 10) (b a)) (- a b)))
+
+    (letrec ((x 2) (y 3)) (* x y))
+    (letrec ((x 2) (y 3)) (letrec ((x 7) (z (+ x y))) (* z x)))
+    (define x 5) (letrec ((x 3) (y 5)) (+ x y)) x
+    (begin (define a 5) (letrec ((a 10) (b a)) (- a b)))
+
+    (letrec ((even?
+              (lambda (n)
+                (if (= 0 n)
+                    #t
+                    (odd? (- n 1)))))
+             (odd?
+              (lambda (n)
+                (if (= 0 n)
+                    #f
+                    (even? (- n 1))))))
+      (even? 88))
+
+    (let* ((x 2) (y 3)) (* x y))
+    (let* ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x)))
+    (let* ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x)))
+    (begin (define a 5) (let* ((a 10) (b a)) (- a b)))
+  `
+  expected := "6\n35\n5"
+  expected += "\n6\n35\n8\n5\n5\n#t"
+  expected += "\n6\n35\n70\n0"
+
   return expected == test(exprs)
 }
 
@@ -250,6 +270,11 @@ func runTests() {
     fmt.Println("TEST stdlib:       PASS")
   } else {
     fmt.Println("TEST stdlib:       FAILED")
+  }
+  if testBindings() {
+    fmt.Println("TEST bindings:     PASS")
+  } else {
+    fmt.Println("TEST bindings:     FAILED")
   }
 }
 

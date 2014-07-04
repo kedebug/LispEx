@@ -18,11 +18,18 @@ func NewLet(patterns []*Name, exprs []Node, body Node) *Let {
 }
 
 func (self *Let) Eval(s *scope.Scope) value.Value {
+  // The <init>s are evaluated in the current environment
+  // (in some unspecified order), the <variable>s are bound
+  // to fresh locations holding the results, the <body> is
+  // evaluated in the extended environment, and the value(s)
+  // of the last expression of <body> is(are) returned.
+
   env := scope.NewScope(s)
+  extended := scope.NewScope(s)
   for i := 0; i < len(self.Patterns); i++ {
-    binder.Define(env, self.Patterns[i].Identifier, self.Exprs[i].Eval(s))
+    binder.Define(extended, self.Patterns[i].Identifier, self.Exprs[i].Eval(env))
   }
-  return self.Body.Eval(env)
+  return self.Body.Eval(extended)
 }
 
 func (self *Let) String() string {
