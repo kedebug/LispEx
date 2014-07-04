@@ -39,7 +39,6 @@ func (self *Pair) Eval(env *scope.Scope) value.Value {
   var first value.Value
   var second value.Value
 
-  //fmt.Println("pair eval:", self.First, self.Second)
   if self.Second == NilPair {
     second = value.NilPairValue
   } else {
@@ -85,10 +84,6 @@ func (self *Pair) Eval(env *scope.Scope) value.Value {
   } else {
     first = self.First.Eval(env)
   }
-  //fmt.Println("evaled:", first, second)
-  //if _, ok := first.(*value.PairValue); ok {
-  //  fmt.Println("first pair value:", first)
-  //}
   return value.NewPairValue(first, second)
 }
 

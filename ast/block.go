@@ -14,10 +14,8 @@ func NewBlock(exprs []Node) *Block {
   return &Block{Exprs: exprs}
 }
 
-func (self *Block) Eval(s *scope.Scope) value.Value {
-  env := scope.NewScope(s)
+func (self *Block) Eval(env *scope.Scope) value.Value {
   length := len(self.Exprs)
-
   if length == 0 {
     return nil
   }

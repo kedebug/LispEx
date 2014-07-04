@@ -15,15 +15,7 @@ func NewUnquoteSplicing(body Node) *UnquoteSplicing {
 }
 
 func (self *UnquoteSplicing) Eval(env *scope.Scope) value.Value {
-  evaluated := self.Body.Eval(env)
-  switch evaluated.(type) {
-  case *value.PairValue:
-    return evaluated
-  case *value.EmptyPairValue:
-    return evaluated
-  default:
-    panic(fmt.Sprintf("unquote-splicing: expected list?, given: %s", evaluated))
-  }
+  return self.Body.Eval(env)
 }
 
 func (self *UnquoteSplicing) String() string {

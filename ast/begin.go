@@ -7,31 +7,24 @@ import (
 )
 
 type Begin struct {
-  Exprs []Node
+  Body Node
 }
 
-func NewBegin(exprs []Node) *Begin {
-  return &Begin{Exprs: exprs}
+func NewBegin(body Node) *Begin {
+  return &Begin{Body: body}
 }
 
 func (self *Begin) Eval(env *scope.Scope) value.Value {
   // The <expression>s are evaluated sequentially from left to right,
   // and the value(s) of the last <expression> is(are) returned.
 
-  length := len(self.Exprs)
-  if length == 0 {
-    return nil
-  }
-  for i := 0; i < length-1; i++ {
-    self.Exprs[i].Eval(env)
-  }
-  return self.Exprs[length-1].Eval(env)
+  return self.Body.Eval(env)
 }
 
 func (self *Begin) String() string {
-  var s string
-  for _, expr := range self.Exprs {
-    s += fmt.Sprintf(" %s", expr)
+  if self.Body.String() == "" {
+    return "(begin)"
+  } else {
+    return fmt.Sprintf("(begin %s)", self.Body)
   }
-  return fmt.Sprintf("(begin%s)", s)
 }
