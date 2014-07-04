@@ -59,6 +59,10 @@ func ParseNode(node ast.Node) ast.Node {
       panic(fmt.Sprint("unquote: not in quasiquote"))
     case constants.UNQUOTE_SPLICING:
       panic(fmt.Sprint("unquote-splicing: not in quasiquote"))
+    case constants.DELAY:
+      return ParseDelay(tuple)
+    case constants.FORCE:
+      return ParseForce(tuple)
     default:
       return ParseCall(tuple)
     }
@@ -419,6 +423,22 @@ func ParseSet(tuple *ast.Tuple) *ast.Set {
   }
   value := ParseNode(elements[2])
   return ast.NewSet(pattern.(*ast.Name), value)
+}
+
+func ParseDelay(tuple *ast.Tuple) *ast.Delay {
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprintf("delay: bad syntax in: %s", tuple))
+  }
+  return ast.NewDelay(ParseNode(elements[1]))
+}
+
+func ParseForce(tuple *ast.Tuple) *ast.Force {
+  elements := tuple.Elements
+  if len(elements) != 2 {
+    panic(fmt.Sprint("force: argument number mismatch, expected 1"))
+  }
+  return ast.NewForce(ParseNode(elements[1]))
 }
 
 func ParseList(nodes []ast.Node) []ast.Node {

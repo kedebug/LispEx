@@ -21,6 +21,8 @@ const (
   UNQUOTE_SPLICING = "unquote-splicing"
   IF               = "if"
   COND             = "cond"
+  DELAY            = "delay"
+  FORCE            = "force"
   GO               = "go"
   CHAN_SEND        = "chan<-"
   CHAN_RECV        = "<-chan"

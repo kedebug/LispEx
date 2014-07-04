@@ -117,10 +117,7 @@ func testLambda() bool {
     ((lambda (x y . z) (+ x y (car z))) 1 2 5 11)
     (define x 10) ((lambda (x) x) 5) x
   `
-  expected := "(lambda x 1 2 3)"
-  expected += "\n(lambda (x) 1 2 3)"
-  expected += "\n(lambda (x y) 1 2 3)"
-  expected += "\n(lambda (x . y) 1 2 3)"
+  expected := "#<procedure>\n#<procedure>\n#<procedure>\n#<procedure>"
   expected += "\na\n(a)\n(a b)\n8\n3\n8\n5\n10"
 
   return expected == test(exprs)
@@ -235,6 +232,16 @@ func testBindings() bool {
   return expected == test(exprs)
 }
 
+func testPromise() bool {
+  exprs := `
+    (define f (delay (+ 1 1))) f (force f) f
+    (define f (delay (+ 1))) (+ 2) (force f)
+    (define f (delay (+ 1))) (force f) (force f)
+  `
+  expected := "#<promise>\n2\n#<promise>\n2\n1\n1"
+  return expected == test(exprs)
+}
+
 func runTests() {
   if testIf() {
     fmt.Println("TEST if:           PASS")
@@ -275,6 +282,11 @@ func runTests() {
     fmt.Println("TEST bindings:     PASS")
   } else {
     fmt.Println("TEST bindings:     FAILED")
+  }
+  if testPromise() {
+    fmt.Println("TEST promise:      PASS")
+  } else {
+    fmt.Println("TEST promise:      FAILED")
   }
 }
 
