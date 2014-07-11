@@ -49,6 +49,8 @@ func ParseNode(node ast.Node) ast.Node {
       return ParseIf(tuple)
     case constants.SET:
       return ParseSet(tuple)
+    case constants.APPLY:
+      return ParseApply(tuple)
     case constants.QUOTE:
       return ParseQuote(tuple)
     case constants.QUASIQUOTE:
@@ -100,6 +102,19 @@ func ParseGo(tuple *ast.Tuple) *ast.Go {
   }
   exprs := ParseList(elements[1:])
   return ast.NewGo(exprs)
+}
+
+func ParseApply(tuple *ast.Tuple) *ast.Apply {
+  // (apply proc arg1 ... args)
+  // Proc must be a procedure and args must be a list
+
+  elements := tuple.Elements
+  if len(elements) != 3 {
+    panic(fmt.Sprint("apply: bad syntax, expected 3 expressions"))
+  }
+  proc := ParseNode(elements[1])
+  args := ParseNode(elements[2])
+  return ast.NewApply(proc, args)
 }
 
 func ParseSelect(tuple *ast.Tuple) *ast.Select {

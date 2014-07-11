@@ -19,6 +19,7 @@ const (
   QUASIQUOTE       = "quasiquote"
   UNQUOTE          = "unquote"
   UNQUOTE_SPLICING = "unquote-splicing"
+  APPLY            = "apply"
   IF               = "if"
   COND             = "cond"
   DELAY            = "delay"
