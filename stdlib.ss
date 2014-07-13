@@ -46,3 +46,22 @@
 (define (display x) (print x))
 
 (define (list . objs) objs)
+
+(define (foldr func end lst)
+  (if (null? lst)
+      end
+      (func (car lst) (foldr func end (cdr lst)))))
+(define (foldl func accum lst)
+  (if (null? lst)
+      accum
+      (foldl func (func accum (car lst)) (cdr lst))))
+(define fold foldl)
+(define reduce fold)
+(define (unfold func init pred)
+  (if (pred init)
+      (cons init '())
+      (cons init (unfold func (func init) pred))))
+(define (sum . lst) (fold + 0 lst))
+
+(define (max first . rest) (fold (lambda (old new) (if (> old new) old new)) first rest))
+(define (min first . rest) (fold (lambda (old new) (if (< old new) old new)) first rest))
