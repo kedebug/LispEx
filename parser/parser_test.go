@@ -76,12 +76,15 @@ func testPrimitives() bool {
     (cons '() '())
 
     (apply * '(1 2 4))
+    (apply + 1 2 '(3 4))
+    (apply min '(6 8 3 2 5))
+    (apply min 5 1 3 '(6 8 3 2 5))
   `
   expected := "1\n0\n1\n2\n0\n1"
   expected += "\n#f\n#t\n#t\n#f\n#f\n#t\n#t\n#f\n#t\n#f"
   expected += "\nabc\nabc\n()\n(compose f g)"
   expected += "\na\na\na\n(b c)\n(b)\n()\nb\n(b . c)\n(a b c)\n(a)\n(a b . c)\n(a . b)\n(())"
-  expected += "\n8"
+  expected += "\n8\n10\n2\n1"
 
   return expected == test(exprs)
 }
@@ -99,13 +102,16 @@ func testDefine() bool {
     (define plus (lambda (x) (+ x y))) (define y 1) (plus 3)
     (define x 0) (define z 1) (define (f x y) (set! z 2) (+ x y)) (f 1 2) x z
     (define x -2) x (set! x (* x x)) x
+
+    (apply + '(1 2 3))
     (define compose
       (lambda (f g)
         (lambda args
           (f (apply g args)))))
     ((compose + *) 12 75)
   `
-  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n4\n900"
+  expected := "3\n6\n1\n2\n4\n2\n3\n6\n1\n(1 2 3)\n2\n4\n3\n0\n2\n-2\n4"
+  expected += "\n6\n900"
 
   return expected == test(exprs)
 }
@@ -187,10 +193,13 @@ func testStdlib() bool {
     (caar '((1 2) 3 4)) (cadr '((1 2) 3 4))
     (cdar '((1 2) 3 4)) (cddr '((1 2) 3 4))
     (caaar '(((1 2) 3) 5 6))
+
+    (sum 1 2 3)
   `
 
   expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f\n#t\n#t"
   expected += "\n1\n3\n(2)\n(4)\n1"
+  expected += "\n6"
 
   return expected == test(exprs)
 }

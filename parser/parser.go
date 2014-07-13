@@ -109,11 +109,11 @@ func ParseApply(tuple *ast.Tuple) *ast.Apply {
   // Proc must be a procedure and args must be a list
 
   elements := tuple.Elements
-  if len(elements) != 3 {
-    panic(fmt.Sprint("apply: bad syntax, expected 3 expressions"))
+  if len(elements) < 3 {
+    panic(fmt.Sprint("apply: bad syntax (missing expressions), expected at least 3"))
   }
   proc := ParseNode(elements[1])
-  args := ParseNode(elements[2])
+  args := ParseList(elements[2:])
   return ast.NewApply(proc, args)
 }
 
