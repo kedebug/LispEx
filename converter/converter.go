@@ -1,28 +1,28 @@
 package converter
 
 import (
-  "github.com/kedebug/LispEx/value"
+  . "github.com/kedebug/LispEx/value"
 )
 
 // convert golang slice to lisp pairs
-func SliceToPairValues(slice []value.Value) value.Value {
-  var front value.Value = value.NilPairValue
+func SliceToPairValues(slice []Value) Value {
+  var front Value = NilPairValue
   for i := len(slice) - 1; i >= 0; i-- {
-    front = value.NewPairValue(slice[i], front)
+    front = NewPairValue(slice[i], front)
   }
   return front
 }
 
 // convert lisp pairs to golang slice
-func PairsToSlice(pairs value.Value) []value.Value {
-  slice := make([]value.Value, 0)
+func PairsToSlice(pairs Value) []Value {
+  slice := make([]Value, 0)
   for {
-    if pairs == nil || pairs == value.NilPairValue {
+    if pairs == nil || pairs == NilPairValue {
       break
     }
     switch pairs.(type) {
-    case *value.PairValue:
-      pair := pairs.(*value.PairValue)
+    case *PairValue:
+      pair := pairs.(*PairValue)
       slice = append(slice, pair.First)
       pairs = pair.Second
     default:

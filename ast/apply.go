@@ -2,6 +2,7 @@ package ast
 
 import (
   "fmt"
+  "github.com/kedebug/LispEx/converter"
   "github.com/kedebug/LispEx/scope"
   . "github.com/kedebug/LispEx/value"
 )
@@ -17,7 +18,14 @@ func NewApply(proc Node, args Node) *Apply {
 
 func (self *Apply) Eval(env *scope.Scope) Value {
   proc := self.Proc.Eval(env)
-  args := self.Args.Eval(env)
+  args := converter.PairsToSlice(self.Args.Eval(env))
+
+  switch proc.(type) {
+  case PrimFunc:
+    return proc.(PrimFunc).Apply(args)
+  default:
+    panic(fmt.Sprintf("apply: expected a procedure, given: %s", self.Proc))
+  }
 }
 
 func (self *Apply) String() string {
