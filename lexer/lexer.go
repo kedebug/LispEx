@@ -123,7 +123,7 @@ func (l *Lexer) errorf(format string, args ...interface{}) stateFn {
 }
 
 func lexWhiteSpace(l *Lexer) stateFn {
-  for r := l.next(); r == ' ' || r == '\t' || r == '\n'; r = l.next() {
+  for r := l.next(); r == ' ' || r == '\t' || r == '\n' || r == '\r'; r = l.next() {
   }
   l.backup()
   l.ignore()
