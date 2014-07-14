@@ -47,6 +47,18 @@
 
 (define (list . objs) objs)
 
+(define (abs num) (if (< num 0) (- num) num))
+; from tinyscheme
+(define gcd
+  (lambda a
+    (if (null? a)
+      0
+      (let ((aa (abs (car a)))
+            (bb (abs (cadr a))))
+         (if (= bb 0)
+              aa
+              (gcd bb (% aa bb)))))))
+
 (define (foldr func end lst)
   (if (null? lst)
       end
