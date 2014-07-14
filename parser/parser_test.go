@@ -76,6 +76,7 @@ func testPrimitives() bool {
     (cons '() '())
 
     (apply * '(1 2 4))
+    (apply + 1 2 '())
     (apply + 1 2 '(3 4))
     (apply min '(6 8 3 2 5))
     (apply min 5 1 3 '(6 8 3 2 5))
@@ -84,7 +85,7 @@ func testPrimitives() bool {
   expected += "\n#f\n#t\n#t\n#f\n#f\n#t\n#t\n#f\n#t\n#f"
   expected += "\nabc\nabc\n()\n(compose f g)"
   expected += "\na\na\na\n(b c)\n(b)\n()\nb\n(b . c)\n(a b c)\n(a)\n(a b . c)\n(a . b)\n(())"
-  expected += "\n8\n10\n2\n1"
+  expected += "\n8\n3\n10\n2\n1"
 
   return expected == test(exprs)
 }
