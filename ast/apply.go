@@ -47,13 +47,13 @@ func (self *Apply) String() string {
 }
 
 // (1 2 '(3)) => (1 2 3)
-func ExpandApplyArgs(slice []Value) Value {
+func ExpandApplyArgs(args []Value) Value {
   prev := NewPairValue(nil, nil)
   curr := NewPairValue(nil, nil)
   front := prev
   expectlist := false
 
-  for i, arg := range slice {
+  for i, arg := range args {
     switch arg.(type) {
     case *PairValue:
       prev.Second = arg.(*PairValue)
@@ -67,12 +67,12 @@ func ExpandApplyArgs(slice []Value) Value {
         }
       }
       expectlist = false
-      if i != len(slice)-1 {
+      if i != len(args)-1 {
         panic(fmt.Sprint("apply: expected list, given: ", arg))
       }
     case *EmptyPairValue:
       expectlist = false
-      if i != len(slice)-1 {
+      if i != len(args)-1 {
         panic(fmt.Sprint("apply: expected list, given: ", arg))
       }
     default:
@@ -84,7 +84,7 @@ func ExpandApplyArgs(slice []Value) Value {
     }
   }
   if expectlist {
-    panic(fmt.Sprint("apply: expected list, given: ", slice[len(slice)-1]))
+    panic(fmt.Sprint("apply: expected list, given: ", args[len(args)-1]))
   }
   return front.Second
 }

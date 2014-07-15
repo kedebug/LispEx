@@ -8,9 +8,8 @@
 (define (pair? x)       (is? x 'pair))
 (define (procedure? x)  (is? x 'procedure))
 
-(define (null? obj)     (if (eqv? obj '()) #t #f))
-
-(define ((compose f g) x)     (f (g x)))
+(define (null? obj) (if (eqv? obj '()) #t #f))
+(define ((compose f g) x) (f (g x)))
 
 ;; list accessors
 (define   caar (compose car car))
@@ -47,7 +46,13 @@
 
 (define (list . objs) objs)
 
+(define (flip func) (lambda (arg1 arg2) (func arg2 arg1)))
+(define (curry func arg1) (lambda (arg) (apply func (cons arg1 (list arg)))))
+
 (define (abs num) (if (< num 0) (- num) num))
+(define (even? num) (= (% num 2) 0))
+(define (odd? num) (not (even? num)))
+
 ; from tinyscheme
 (define gcd
   (lambda a
@@ -63,10 +68,12 @@
   (if (null? lst)
       end
       (func (car lst) (foldr func end (cdr lst)))))
+
 (define (foldl func accum lst)
   (if (null? lst)
       accum
       (foldl func (func accum (car lst)) (cdr lst))))
+
 (define fold foldl)
 (define reduce fold)
 (define (unfold func init pred)
@@ -75,5 +82,14 @@
       (cons init (unfold func (func init) pred))))
 (define (sum . lst) (fold + 0 lst))
 
-(define (max first . rest) (fold (lambda (old new) (if (> old new) old new)) first rest))
-(define (min first . rest) (fold (lambda (old new) (if (< old new) old new)) first rest))
+(define (max first . rest) 
+  (fold (lambda (old new) (if (> old new) old new)) first rest))
+
+(define (min first . rest) 
+  (fold (lambda (old new) (if (< old new) old new)) first rest))
+
+(define (map func lst) 
+  (foldr (lambda (x y) (cons (func x) y)) '() lst))
+
+(define (filter pred lst) 
+  (foldr (lambda (x y) (if (pred x) (cons x y) y)) '() lst))

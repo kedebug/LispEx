@@ -3,7 +3,7 @@ package ast
 import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
-  "github.com/kedebug/LispEx/value"
+  . "github.com/kedebug/LispEx/value"
 )
 
 type Force struct {
@@ -14,9 +14,9 @@ func NewForce(promise Node) *Force {
   return &Force{Promise: promise}
 }
 
-func (self *Force) Eval(s *scope.Scope) value.Value {
+func (self *Force) Eval(s *scope.Scope) Value {
   val := self.Promise.Eval(s)
-  if promise, ok := val.(*value.Promise); ok {
+  if promise, ok := val.(*Promise); ok {
     if promise.IsVal == false {
       return nil
     } else {

@@ -3,7 +3,7 @@ package ast
 import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
-  "github.com/kedebug/LispEx/value"
+  . "github.com/kedebug/LispEx/value"
 )
 
 type Name struct {
@@ -14,9 +14,9 @@ func NewName(identifier string) *Name {
   return &Name{Identifier: identifier}
 }
 
-func (self *Name) Eval(env *scope.Scope) value.Value {
+func (self *Name) Eval(env *scope.Scope) Value {
   if val := env.Lookup(self.Identifier); val != nil {
-    return val.(value.Value)
+    return val.(Value)
   } else {
     panic(fmt.Sprintf("%s: undefined identifier", self.Identifier))
   }
