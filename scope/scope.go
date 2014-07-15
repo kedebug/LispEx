@@ -29,6 +29,8 @@ func NewRootScope() *Scope {
   root.Put("<", primitives.NewLt())
   root.Put("<=", primitives.NewLtE())
   root.Put("%", primitives.NewMod())
+  root.Put("and", primitives.NewAnd())
+  root.Put("or", primitives.NewOr())
   root.Put("eqv?", primitives.NewIsEqv())
   root.Put("type-of", primitives.NewTypeOf())
   root.Put("print", primitives.NewPrint())
