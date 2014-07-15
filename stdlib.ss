@@ -42,13 +42,15 @@
 (define cddddr (compose cdr cdddr))
 
 (define (not x) (if x #f #t))
-(define (display x) (print x))
 
 (define (list . objs) objs)
 
 (define (flip func) (lambda (arg1 arg2) (func arg2 arg1)))
 (define (curry func arg1) (lambda (arg) (apply func (cons arg1 (list arg)))))
 
+(define zero? (curry = 0))
+(define positive? (curry < 0))
+(define negative? (curry > 0))
 (define (abs num) (if (< num 0) (- num) num))
 (define (even? num) (= (% num 2) 0))
 (define (odd? num) (not (even? num)))
@@ -63,6 +65,16 @@
          (if (= bb 0)
               aa
               (gcd bb (% aa bb)))))))
+
+(define lcm
+  (lambda a
+    (if (null? a)
+      1
+      (let ((aa (abs (car a)))
+            (bb (abs (cadr a))))
+         (if (or (= aa 0) (= bb 0))
+             0
+             (abs (* (/ aa (gcd aa bb)) bb)))))))
 
 (define (foldr func end lst)
   (if (null? lst)
