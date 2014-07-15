@@ -195,15 +195,21 @@ func testStdlib() bool {
     (cdar '((1 2) 3 4)) (cddr '((1 2) 3 4))
     (caaar '(((1 2) 3) 5 6))
 
+    (zero? 1) (zero? 0)
+    (positive? 1) (positive? 0) (positive? -1)
+    (negative? -1) (negative? 0) (negative? 1)
+
     (sum 1 2 3)
     (gcd 32 -36) (gcd)
+    (lcm 32 -36) (lcm)
     (map (curry + 2) '(1 2 3 4))
     (filter even? '(1 2 3 4))
   `
 
   expected := "#t\n#t\n#f\n#t\n#f\n#f\n#t\n#f\n#t\n#t\n#t\n#t\n#f\n#t\n#t"
   expected += "\n1\n3\n(2)\n(4)\n1"
-  expected += "\n6\n4\n0\n(3 4 5 6)\n(2 4)"
+  expected += "\n#f\n#t\n#t\n#f\n#f\n#t\n#f\n#f"
+  expected += "\n6\n4\n0\n288\n1\n(3 4 5 6)\n(2 4)"
 
   return expected == test(exprs)
 }
