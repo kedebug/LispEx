@@ -10,7 +10,7 @@ import (
 func testFile(filename string, t *testing.T) string {
   lib, err := ioutil.ReadFile("../stdlib.ss")
   if err != nil {
-    panic(err)
+    t.Error(err)
   }
   exprs, err := ioutil.ReadFile(filename)
   if err != nil {
