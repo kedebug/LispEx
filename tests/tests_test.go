@@ -8,11 +8,15 @@ import (
 )
 
 func testFile(filename string, t *testing.T) string {
+  lib, err := ioutil.ReadFile("../stdlib.ss")
+  if err != nil {
+    panic(err)
+  }
   exprs, err := ioutil.ReadFile(filename)
   if err != nil {
     t.Error(err)
   }
-  return repl.REPL(string(exprs), scope.NewRootScope())
+  return repl.REPL(string(lib)+string(exprs), scope.NewRootScope())
 }
 
 func TestIf(t *testing.T) {
@@ -119,18 +123,18 @@ func TestBinding(t *testing.T) {
   }
 }
 
-func TestPromise(t *testing.T) {
-  result := testFile("promise_test.ss", t)
-  expected := "#<promise>\n2\n#<promise>\n2\n1\n1"
+func TestPingPong(t *testing.T) {
+  result := testFile("ping_pong_test.ss", t)
+  expected := ""
 
   if expected != result {
     t.Error("expected: ", expected, " evaluated: ", result)
   }
 }
 
-func TestPingPong(t *testing.T) {
-  result := testFile("ping_pong_test.ss", t)
-  expected := ""
+func TestPromise(t *testing.T) {
+  result := testFile("promise_test.ss", t)
+  expected := "#<promise>\n2\n#<promise>\n2\n1\n1"
 
   if expected != result {
     t.Error("expected: ", expected, " evaluated: ", result)

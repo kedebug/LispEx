@@ -39,6 +39,7 @@ func NewRootScope() *Scope {
   root.Put("cdr", primitives.NewCdr())
   root.Put("cons", primitives.NewCons())
   root.Put("make-chan", primitives.NewMakeChan())
+  root.Put("close-chan", primitives.NewCloseChan())
   root.Put("<-chan", primitives.NewChanRecv())
   root.Put("chan<-", primitives.NewChanSend())
   root.Put("#t", value.NewBoolValue(true))

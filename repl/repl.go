@@ -5,20 +5,14 @@ import (
   "github.com/kedebug/LispEx/ast"
   "github.com/kedebug/LispEx/parser"
   "github.com/kedebug/LispEx/scope"
-  "io/ioutil"
 )
 
 // read-eval-print loop
 func REPL(exprs string, env *scope.Scope) string {
-  var result string
-  var first bool = true
+  result := ""
+  first := true
 
-  lib, err := ioutil.ReadFile("../stdlib.ss")
-  if err != nil {
-    panic(err)
-  }
-
-  sexprs := parser.ParseFromString("<REPL>", string(lib)+exprs)
+  sexprs := parser.ParseFromString("<REPL>", exprs)
   values := ast.EvalList(sexprs, env)
 
   for _, val := range values {
