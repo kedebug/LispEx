@@ -7,7 +7,10 @@ import (
   "github.com/kedebug/LispEx/scope"
   "io/ioutil"
   "os"
+  "time"
 )
+
+const version = "LispEx 0.1.0"
 
 func LoadStdlib() string {
   lib, err := ioutil.ReadFile("stdlib.ss")
@@ -47,12 +50,20 @@ func main() {
   repl.REPL(lib, env)
   reader := bufio.NewReader(os.Stdin)
 
+  fmt.Printf("%s (%v)\n", version, time.Now().Format(time.RFC850))
+
   for {
     fmt.Print(">> ")
     line, _, _ := reader.ReadLine()
     try(
-      func() { fmt.Println(repl.REPL(string(line), env)) },
+      func() {
+        r := repl.REPL(string(line), env)
+        if len(r) > 0 {
+          fmt.Println(r)
+        }
+      },
       func(e interface{}) { fmt.Println(e) },
     )
+    time.Sleep(120 * time.Millisecond)
   }
 }
