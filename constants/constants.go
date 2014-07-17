@@ -28,4 +28,6 @@ const (
   CHAN_SEND        = "chan<-"
   CHAN_RECV        = "<-chan"
   SELECT           = "select"
+  DEFAULT          = "default"
+  SLEEP            = "sleep"
 )

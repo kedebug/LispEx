@@ -104,7 +104,7 @@ func TestStdlib(t *testing.T) {
 
 func TestSelect(t *testing.T) {
   result := testFile("select_test.ss", t)
-  expected := "\"hello world\""
+  expected := "\"hello world\"\n3\n1\n42\n2\n42"
 
   if expected != result {
     t.Error("expected: ", expected, " evaluated: ", result)

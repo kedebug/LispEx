@@ -157,6 +157,10 @@ func ParseSelect(tuple *ast.Tuple) *ast.Select {
             continue
           }
         }
+      } else if name, ok := clauses[i][0].(*ast.Name); ok {
+        if name.Identifier == constants.DEFAULT {
+          continue
+        }
       }
     }
     panic(fmt.Sprint("select: bad syntax, given: ", clause))

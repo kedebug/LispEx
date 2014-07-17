@@ -42,6 +42,7 @@ func NewRootScope() *Scope {
   root.Put("close-chan", primitives.NewCloseChan())
   root.Put("<-chan", primitives.NewChanRecv())
   root.Put("chan<-", primitives.NewChanSend())
+  root.Put("sleep", primitives.NewSleep())
   root.Put("#t", value.NewBoolValue(true))
   root.Put("#f", value.NewBoolValue(false))
   return root

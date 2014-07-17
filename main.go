@@ -53,7 +53,7 @@ func main() {
   fmt.Printf("%s (%v)\n", version, time.Now().Format(time.RFC850))
 
   for {
-    fmt.Print(">> ")
+    fmt.Print(">>> ")
     line, _, _ := reader.ReadLine()
     try(
       func() {
@@ -64,6 +64,5 @@ func main() {
       },
       func(e interface{}) { fmt.Println(e) },
     )
-    time.Sleep(120 * time.Millisecond)
   }
 }
