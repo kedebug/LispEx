@@ -79,6 +79,14 @@ func ParseNode(node ast.Node) ast.Node {
   }
 }
 
+func ParseList(nodes []ast.Node) []ast.Node {
+  var parsed []ast.Node
+  for _, node := range nodes {
+    parsed = append(parsed, ParseNode(node))
+  }
+  return parsed
+}
+
 func ParseBlock(tuple *ast.Tuple) *ast.Block {
   elements := tuple.Elements
   exprs := ParseList(elements)
@@ -97,11 +105,11 @@ func ParseGo(tuple *ast.Tuple) *ast.Go {
   // (go <expression1> <expression2> ...)
 
   elements := tuple.Elements
-  if len(elements) < 2 {
-    panic(fmt.Sprint("go: bad syntax (missing expressings), expected at least 1"))
+  if len(elements) != 2 {
+    panic(fmt.Sprint("go: bad syntax, only expected 1 expression"))
   }
-  exprs := ParseList(elements[1:])
-  return ast.NewGo(exprs)
+  expr := ParseNode(elements[1])
+  return ast.NewGo(expr)
 }
 
 func ParseApply(tuple *ast.Tuple) *ast.Apply {
@@ -454,12 +462,4 @@ func ParseForce(tuple *ast.Tuple) *ast.Force {
     panic(fmt.Sprint("force: argument number mismatch, expected 1"))
   }
   return ast.NewForce(ParseNode(elements[1]))
-}
-
-func ParseList(nodes []ast.Node) []ast.Node {
-  var parsed []ast.Node
-  for _, node := range nodes {
-    parsed = append(parsed, ParseNode(node))
-  }
-  return parsed
 }

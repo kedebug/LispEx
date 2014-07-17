@@ -21,7 +21,8 @@
       (pong (- n 1)))
     (chan<- sem 'exit-pong)))
 
-(go (ping 6) (pong 6))
+(go (ping 6))
+(go (pong 6))
 
 (display (<-chan sem)) (newline)
 (display (<-chan sem)) (newline)

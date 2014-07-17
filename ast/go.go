@@ -7,24 +7,26 @@ import (
 )
 
 type Go struct {
-  Exprs []Node
+  Expr Node
 }
 
-func NewGo(exprs []Node) *Go {
-  return &Go{Exprs: exprs}
+func NewGo(expr Node) *Go {
+  return &Go{Expr: expr}
 }
 
 func (self *Go) Eval(env *scope.Scope) value.Value {
-  for _, expr := range self.Exprs {
-    go expr.Eval(env)
-  }
+  // We need to recover the panic message of goroutine
+  go func() {
+    defer func() {
+      if err := recover(); err != nil {
+        fmt.Println(err)
+      }
+    }()
+    self.Expr.Eval(env)
+  }()
   return nil
 }
 
 func (self *Go) String() string {
-  var s string
-  for _, expr := range self.Exprs {
-    s += fmt.Sprintf(" %s", expr)
-  }
-  return fmt.Sprintf("(go%s)", s)
+  return fmt.Sprintf("(go %s)", self.Expr)
 }
