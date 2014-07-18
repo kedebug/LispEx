@@ -56,6 +56,14 @@
 (define (odd? num) (not (even? num)))
 
 ; from tinyscheme
+(define (list-tail x k)
+    (if (zero? k)
+        x
+        (list-tail (cdr x) (- k 1))))
+(define (list-ref x k)
+    (car (list-tail x k)))
+
+; from tinyscheme
 (define gcd
   (lambda a
     (if (null? a)
@@ -105,3 +113,6 @@
 
 (define (filter pred lst) 
   (foldr (lambda (x y) (if (pred x) (cons x y) y)) '() lst))
+
+(define (length lst) (fold (lambda (x y) (+ x 1)) 0 lst))
+(define (reverse lst) (fold (flip cons) '() lst))

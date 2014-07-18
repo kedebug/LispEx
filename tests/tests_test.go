@@ -132,6 +132,15 @@ func TestPingPong(t *testing.T) {
   }
 }
 
+func TestSelectPingPong(t *testing.T) {
+  result := testFile("select_ping_pong_test.ss", t)
+  expected := ""
+
+  if expected != result {
+    t.Error("expected: ", expected, " evaluated: ", result)
+  }
+}
+
 func TestPromise(t *testing.T) {
   result := testFile("promise_test.ss", t)
   expected := "#<promise>\n2\n#<promise>\n2\n1\n1"

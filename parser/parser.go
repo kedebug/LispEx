@@ -128,7 +128,7 @@ func ParseApply(tuple *ast.Tuple) *ast.Apply {
 func ParseSelect(tuple *ast.Tuple) *ast.Select {
   // (select <clause1> <clause2> ...)
   //  <clause> = (<case> <expression1> <expression2>)
-  //    <case> = (<chan-send> | <chan-recv>)
+  //    <case> = (<chan-send> | <chan-recv> | <default>)
 
   elements := tuple.Elements
   if len(elements) < 2 {
