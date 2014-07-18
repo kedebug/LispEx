@@ -30,4 +30,5 @@ const (
   SELECT           = "select"
   DEFAULT          = "default"
   SLEEP            = "sleep"
+  RANDOM           = "random"
 )
