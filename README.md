@@ -149,6 +149,17 @@ For more interesting examples, please see files under [tests](/tests) folder.
 
 
 ### Have a try
+```
+git clone https://github.com/kedebug/LispEx.git
+cd LispEx
+go build && ./LispEx
+LispEx 0.1.0 (Saturday, 19-Jul-14 12:52:45 CST)
+>>> 
+```
+From here you can type in forms and you'll get the evaluated expressions back. To interpreter a file:
+```
+./LispEx filename.ss
+```
 Lisp is fun, go is fun, concurrency is fun. Hope you will have an extraordinary programming experience with LispEx.
 
 ### License
