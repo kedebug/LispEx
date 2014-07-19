@@ -4,7 +4,51 @@ A dialect of Lisp extended to support for concurrent programming.
 
 
 ### Overview
-LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/). What's new, some *Go* liked concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` to connect the concurrent coroutines. A ping-pong example is shown below:
+LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/):
+
+```ss
+LispEx 0.1.0 (Saturday, 19-Jul-14 12:52:45 CST)
+
+;; lambda expression
+>>> ((lambda (x y . z) (+ x y (car z))) 1 2 5 11)
+8
+
+;; currying
+>>> (define (curry func arg1) (lambda (arg) (apply func arg1 (list arg))))
+>>> (map (curry + 2) '(1 2 3 4))
+(3 4 5 6)
+
+;; apply
+>>> (apply + 1 2 '(3 4))
+10
+
+;; composite function
+>>> (define ((compose f g) x) (f (g x)))
+>>> (define caar (compose car car))
+>>> (caar '((1 2) 3 4))
+1
+
+;; tail recursion 
+>>> (letrec 
+      ((even? (lambda (n) (if (= 0 n) #t (odd? (- n 1)))))
+       (odd?  (lambda (n) (if (= 0 n) #f (even? (- n 1))))))
+      (even? 88))
+#t
+
+;; multiple nestings of quasiquote 
+;; (challenging to have a right implementation)
+>>> `(1 `,(+ 1 ,(+ 2 3)) 4)
+(1 `,(+ 1 5) 4)
+>>> `(1 ```,,@,,@(list (+ 1 2)) 4)
+(1 ```,,@,3 4)
+
+;; lazy evaluation
+>>> (define f (delay (+ 1)))
+>>> (force f)
+1
+```
+
+What's new, some *Go* liked concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` to connect the concurrent coroutines. A ping-pong example is shown below:
 
 ```ss
 ; define channels
@@ -89,15 +133,23 @@ In this scenario, `default` case is chosen since there is no ready data in `chan
 ; the output will be randomized: hello-chan-1 or hello-chan-2
 ```
 
+For more interesting examples, please see files under [tests](/tests) folder.
 
 
 ### Features
-- Clean design
+- Clean designed code, very easy for you to understand the principle, inspired from [yin](https://github.com/yinwang0/yin)
 - A concurrent design for lexical scanning, inspired from [Rob Pike](http://cuddle.googlecode.com/hg/talk/lex.html#title-slide)
-- Built in Coroutines and Channels. 
+- Builtin routines, channels and other necessary components for concurrent programming
+- Give you a REPL
+
+### In developing
+- `loop` in R5RS
+- tail call optimization
+- type checker
+
 
 ### Have a try
 Lisp is fun, go is fun, concurrency is fun. Hope you will have an extraordinary programming experience with LispEx.
 
-### Future
-- 
+### License
+MIT
