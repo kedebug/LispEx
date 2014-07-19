@@ -4,12 +4,13 @@ A dialect of Lisp extended to support for concurrent programming.
 
 
 ### Overview
-LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/). What's new, some *Go* liked concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` to connect the concurrent coroutines. A ping-pong example is shows below:
+LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/). What's new, some *Go* liked concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` to connect the concurrent coroutines. A ping-pong example is shown below:
 
 ```ss
 ; define channels
 (define ping-chan (make-chan))
 (define pong-chan (make-chan))
+; define a buffered channel
 (define sem (make-chan 2))
 
 (define (ping n)
@@ -30,14 +31,14 @@ LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantic
       (pong (- n 1)))
     (chan<- sem 'exit-pong)))
 
-(go (ping 6))  ; start ping coroutine
-(go (pong 6))  ; start pong coroutine
+(go (ping 6))  ; start ping-routine
+(go (pong 6))  ; start pong-routine
 
-; use channel as semaphore, waiting for ping-pong finishing
-(<-chan sem)
-(<-chan sem)
+; implement semaphore with channel, waiting for ping-pong finishing
+(<-chan sem) (newline)
+(<-chan sem) (newline)
 
-; close channels
+; should close channels if you don't need it
 (close-chan sem)
 (close-chan pong-chan)
 (close-chan ping-chan)
@@ -45,7 +46,48 @@ LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantic
 ; the output will be: ping pong ping pong ... exit-ping exit-pong
 ```
 
-Furthermore, `select` statement is supported, which is necessary for you to select between multiple channels, just like *Go*.  
+Furthermore, `select` statement is also supported, which is necessary for you to select between multiple channels that working with multiple coroutines. Just like *Go*, the code can be written like this:
+
+```ss
+(define chan-1 (make-chan))
+(define chan-2 (make-chan))
+
+(go (chan<- chan-1 'hello-chan-1))
+(go (chan<- chan-2 'hello-chan-2))
+
+(select
+  ((<-chan chan-1))
+  ((<-chan chan-2))
+  (default 'hello-default))
+
+(close-chan chan-1)
+(close-chan chan-2)
+
+; the output will be: hello-default, as it will cost some CPU times when a coroutine is lanuched.
+```
+
+In this scenario, `default` case is chosen since there is no ready data in `chan-1` or `chan-2` when `select` statement is intepretered. But such scenario will be changed if we `sleep` the main thread for a while:
+
+```ss
+(define chan-1 (make-chan))
+(define chan-2 (make-chan))
+
+(go (chan<- chan-1 'hello-chan-1))
+(go (chan<- chan-2 'hello-chan-2))
+
+; sleep for 20 millisecond
+(sleep 20)
+
+(select
+  ((<-chan chan-1))
+  ((<-chan chan-2))
+  (default 'hello-default))
+
+(close-chan chan-1)
+(close-chan chan-2)
+
+; the output will be randomized: hello-chan-1 or hello-chan-2
+```
 
 
 
