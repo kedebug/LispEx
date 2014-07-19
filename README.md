@@ -1,4 +1,4 @@
-LispEx
+LispEx [![status](https://sourcegraph.com/api/repos/github.com/kedebug/LispEx/.badges/status.png)](https://sourcegraph.com/github.com/kedebug/LispEx)
 ======
 A dialect of Lisp extended to support for concurrent programming.
 
