@@ -4,7 +4,7 @@ A dialect of Lisp extended to support for concurrent programming.
 
 
 ### Overview
-LispEx is another *Lisp Interperter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/):
+LispEx is another *Lisp Interpreter* implemented with *Go*. The syntax, semantics and library procedures are a subset of [R5RS](http://www.schemers.org/Documents/Standards/R5RS/):
 
 ```ss
 LispEx 0.1.0 (Saturday, 19-Jul-14 12:52:45 CST)
@@ -48,7 +48,7 @@ LispEx 0.1.0 (Saturday, 19-Jul-14 12:52:45 CST)
 1
 ```
 
-What's new, some *Go* liked concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` to connect the concurrent coroutines. A ping-pong example is shown below:
+What's new, some *Go*-like concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` connecting them. A ping-pong example is shown below:
 
 ```ss
 ; define channels
