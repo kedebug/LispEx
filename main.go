@@ -12,22 +12,25 @@ import (
 
 const version = "LispEx 0.1.0"
 
-func LoadStdlib() string {
+func LoadStdlib() (string, error) {
   lib, err := ioutil.ReadFile("stdlib.ss")
   if err != nil {
-    panic(fmt.Sprintf("failed reading file: %v", err))
+    return "", err
   }
-  return string(lib)
+  return string(lib), nil
 }
 
-func EvalFile(filename string) {
-  lib := LoadStdlib()
+func EvalFile(filename string) error {
+  lib, err := LoadStdlib()
+  if err != nil {
+    return err
+  }
   exprs, err := ioutil.ReadFile(filename)
   if err != nil {
-    panic(fmt.Sprintf("failed reading file: %v", err))
-    return
+    return err
   }
   fmt.Println(repl.REPL(string(lib)+string(exprs), scope.NewRootScope()))
+  return nil
 }
 
 func try(body func(), handler func(interface{})) {
@@ -41,11 +44,17 @@ func try(body func(), handler func(interface{})) {
 
 func main() {
   if len(os.Args) > 1 {
-    EvalFile(os.Args[1])
+    if err := EvalFile(os.Args[1]); err != nil {
+      fmt.Println(err)
+    }
     return
   }
 
-  lib := LoadStdlib()
+  lib, err := LoadStdlib()
+  if err != nil {
+    fmt.Println(err)
+    return
+  }
   env := scope.NewRootScope()
   repl.REPL(lib, env)
   reader := bufio.NewReader(os.Stdin)
