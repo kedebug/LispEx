@@ -1,6 +1,6 @@
 LispEx [![Build Status](https://travis-ci.org/kedebug/LispEx.svg?branch=master)](https://travis-ci.org/kedebug/LispEx) [![status](https://sourcegraph.com/api/repos/github.com/kedebug/LispEx/.badges/status.png)](https://sourcegraph.com/github.com/kedebug/LispEx)
 ======
-A dialect of Lisp extended to support for concurrent programming.
+A dialect of Lisp extended to support concurrent programming.
 
 
 ### Overview
@@ -48,7 +48,7 @@ LispEx 0.1.0 (Saturday, 19-Jul-14 12:52:45 CST)
 1
 ```
 
-What's new, some *Go*-like concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` connecting them. A ping-pong example is shown below:
+What's new, the *Go*-like concurrency features are introduced in LispEx. You can start new coroutines with `go` statements, and use `<-chan` or `chan<-` connecting them. A ping-pong example is shown below:
 
 ```ss
 ; define channels
@@ -90,7 +90,7 @@ What's new, some *Go*-like concurrency features are introduced in LispEx. You ca
 ; the output will be: ping pong ping pong ... exit-ping exit-pong
 ```
 
-Furthermore, `select` statement is also supported, which is necessary for you to select between multiple channels that working with multiple coroutines. Just like *Go*, the code can be written like this:
+Furthermore, `select` statement is also supported, which is necessary for you to select between multiple channels that working with concurrent routines. Just like *Go*, the code can be written like this:
 
 ```ss
 (define chan-1 (make-chan))

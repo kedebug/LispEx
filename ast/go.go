@@ -3,7 +3,7 @@ package ast
 import (
   "fmt"
   "github.com/kedebug/LispEx/scope"
-  "github.com/kedebug/LispEx/value"
+  . "github.com/kedebug/LispEx/value"
 )
 
 type Go struct {
@@ -14,7 +14,7 @@ func NewGo(expr Node) *Go {
   return &Go{Expr: expr}
 }
 
-func (self *Go) Eval(env *scope.Scope) value.Value {
+func (self *Go) Eval(env *scope.Scope) Value {
   // We need to recover the panic message of goroutine
   go func() {
     defer func() {
@@ -22,7 +22,7 @@ func (self *Go) Eval(env *scope.Scope) value.Value {
         fmt.Println(err)
       }
     }()
-    self.Expr.Eval(env)
+    self.Expr.Eval(scope.NewScope(env))
   }()
   return nil
 }
