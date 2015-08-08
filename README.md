@@ -1,4 +1,4 @@
-LispEx [![Build Status](https://travis-ci.org/kedebug/LispEx.svg?branch=master)](https://travis-ci.org/kedebug/LispEx) [![status](https://sourcegraph.com/api/repos/github.com/kedebug/LispEx/.badges/status.png)](https://sourcegraph.com/github.com/kedebug/LispEx)
+LispEx [![Build Status](https://travis-ci.org/kedebug/LispEx.svg?branch=master)](https://travis-ci.org/kedebug/LispEx) 
 ======
 A dialect of Lisp extended to support concurrent programming.
 
